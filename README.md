@@ -77,4 +77,6 @@ Steps for a session may onclude some or all of the following:
 * Go to your local directory with shesmu config files, create a branch, review 
   and commit your changes. Push to the repo and create a Pull Request
 
+------------------------------------------------------------------------------
 
+Developed using Python 3.8, Pycharm IDE v.2020.1 and Flask 2.0.2 
