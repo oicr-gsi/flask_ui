@@ -4,11 +4,9 @@ This app aims to provide a graphical inerface for customization of projectconfig
 The interface requires flask installation so it can run in a web browser locally. Some settings also
 need to be specified, see INSTALL for that. 
 
- Installing flask: 
-   https://flask.palletsprojects.com/en/2.1.x/installation/ 
+![Installing Flask](https://flask.palletsprojects.com/en/2.1.x/installation/)
  
- Creating Virtual Environment: 
-   https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-and-using-virtual-environments
+![Creating Virtual Environment](https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-and-using-virtual-environments)
 
 ## Launching the App
 
@@ -24,12 +22,11 @@ config-ui.py script resides. Before running the app, some environment variables 
 
 Assuming that you have your virtual environment configured, you also need to run
 
+```
  source venv/bin/activate
+```
 
-====================================================
-
-
-to make things easier you may edit the pre_flight.sh
+To make things easier you may edit the pre_flight.sh
 script and start your app with
 
 ```
@@ -46,6 +43,7 @@ the prompt should change after that. After everything is initialized, type
 
 The message should look similar to this:
 
+```
  * Serving Flask app 'config_ui.py' (lazy loading)
  * Environment: development
  * Debug mode: on
@@ -53,17 +51,12 @@ The message should look similar to this:
  * Restarting with stat
  * Debugger is active!
  * Debugger PIN: 874-681-120
+```
 
 ## Stopping the app
 
 Crl+C on your console is sufficient, flask will stop serving the app at 127.0.0.1:5000
-You may also type
-
-```
-  deactivate
-```
-
-to tterminate the python virtual environment used by flask
+You may also type **deactivate** to terminate the python virtual environment used by flask
 
 ## Typical Usage
 
@@ -74,7 +67,7 @@ Steps for a session may onclude some or all of the following:
 
 * Select a project, review the configuration. Make your selection of parameters and enable
   or disable individual components of computational pipelines
-* Reset if not happy with your changes, this will restore configuration from disk
+* Reset if not happy with your changes, this will restore configuration from the disk
 * Apply a preset if applicable
 * Create a configuration for a new project by cloning, then applying a preset
   or changing individual parameters
@@ -83,7 +76,5 @@ Steps for a session may onclude some or all of the following:
   otherwise your changes will be lost if you select another project
 * Go to your local directory with shesmu config files, create a branch, review 
   and commit your changes. Push to the repo and create a Pull Request
-  
-
 
 
