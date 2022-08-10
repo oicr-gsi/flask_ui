@@ -60,7 +60,7 @@ You may also type **deactivate** to terminate the python virtual environment use
 
 ## Typical Usage
 
-![usage_flowchart](docs/ui_flowchart.png)
+![usage_flowchart](images/ui_flowchart.png)
 
 The UI shows a couple of drop-down lists, one for projects and the other one for presets
 Steps for a session may onclude some or all of the following:
