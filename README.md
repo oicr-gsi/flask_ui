@@ -16,11 +16,11 @@ Normally, you would update your production branch of the repo with shesmu config
 (currently it is spb-seqware-production) and go into your flask-ui directory where
 config-ui.py script resides. Before running the app, some environment variables need to be set:
 
-'''
+```
  export FLASK_APP=config_ui.py
  export FLASK_ENV=development
  export UICONFIG_SETTINGS="/home/USERNAME/secrets/ui_config.cfg"
-'''
+```
 
 Assuming that you have your virtual environment configured, you also need to run
 
@@ -32,17 +32,17 @@ Assuming that you have your virtual environment configured, you also need to run
 to make things easier you may edit the pre_flight.sh
 script and start your app with
 
-'''
+```
   source pre_flight.sh
-'''
+```
 
 ====================================================
 
 the prompt should change after that. After everything is initialized, type
 
-'''
+```
  flask run
-'''
+```
 
 The message should look similar to this:
 
@@ -59,9 +59,9 @@ The message should look similar to this:
 Crl+C on your console is sufficient, flask will stop serving the app at 127.0.0.1:5000
 You may also type
 
-'''
+```
   deactivate
-'''
+```
 
 to tterminate the python virtual environment used by flask
 
