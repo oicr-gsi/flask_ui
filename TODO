@@ -1,0 +1,13 @@
+* The most pressing item is to make a script that would automatically generate the nested_list.html file
+  This script whould read a projectconfig file and create an updated .html template for rendering Configuration UI
+
+* Automatic generation of a default .jsonconfig file (or object) - need to have it in order to fill in
+  the values which are set to null for a project but get enabled using the UI.
+
+* GIT operations - at the moment, the prototype is not capable to interact with a remote repository,
+  implementing basic functionality in UI (create a branch, commit push and submit a pull request) 
+  will be desirable
+
+* Making the app more robust - as of now, there is no code to ensure a secure, error-resilient
+  workflow. There is no syntax check and verification of any pending changes is the human 
+  operator's task

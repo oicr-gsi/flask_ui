@@ -1,0 +1,25 @@
+# Flask and venv 
+
+ Installing flask:
+   https://flask.palletsprojects.com/en/2.1.x/installation/
+
+ Creating Virtual Environment:
+   https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-and-using-virtual-environments
+
+# Environment variables
+
+(Also see README)
+
+FLASK_APP 		needs to be the name of the main script (config_ui.py)
+FLASK_ENV 		should be set to 'development'
+UICONFIG_SETTINGS 	variable used by the main script, path to the config file for the app 
+
+# Custom settings
+
+UICONFIG_SETTINGS points to a config file which should have the following variable set:
+
+CONFIG_PATH=[Path to the config file which sits in a local cloned source tree for spb-seqware-production repo]
+PRESET_PATH=[Path to a .jsonconfig file with presets used to configure the projects]
+DEFAULTS_PATH=[Path to a .jsonconfig file with pre-filled defaults]
+
+

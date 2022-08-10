@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Config UI App</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico')}}">
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+    <!-- Script for refreshing UI state (checkboxes and text values) -->
+    <script type="text/javascript">
+      window.onload = function() {
+       if(document.forms[0]) {
+       {% for box in checkbox_list %}
+         if (document.forms[0].{{box.id}}) {
+             document.forms[0].{{box.id}}.checked = "{{box.status}}";
+         }
+       {% endfor %}
+
+       {% for txt in texts_list %}
+         if (document.forms[0].{{txt.id}}) {
+             document.forms[0].{{txt.id}}.value = "{{txt.value}}";
+         }
+       {% endfor %}
+         $('.ui.dropdown').dropdown();
+
+       {% for opt in opts_list %}
+         $('#{{opt.id}}').dropdown('set selected', '{{opt.value}}');
+       {% endfor %}
+       }
+      }
+    </script>
+</head>
+
+<body>
+<div style="margin-top: 50px;" class="ui container">
+    <h1 class="ui center aligned header">Project Config UI [Prototype]</h1>
+    {% for message in messages %}
+    <div class="ui warning message">
+    <i class="close icon"></i>
+    <div class="header">
+          {{message.title}}
+    </div>
+    <p>{{message.body}}</p>
+    </div>
+    {% endfor %}
+    <form class="ui form" action="/select" method="post">
+        <div class="field">
+            <label>Select Project</label>
+            <select name="Project" id="projects" value="{{selected_project}}"
+                    onchange='document.getElementById("input").value=document.getElementById("projects").value;
+                              document.getElementById("preset_input").value="";this.form.submit()'>
+                {% for project in project_list %}
+                {% if project.id == selected_project %}
+                <option value={{project.id}} selected="selected">{{project.title}}</option>
+                {% else %}
+                <option value={{project.id}}>{{project.title}}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+            <!--This hidden input holds the name of the project being updated, will keep the value on selecting
+                another project and can be used to update the values when user navigates away-->
+            <input type="hidden" id="updated_project" name="updatedProject" value={{selected_project}}>
+        </div>
+        <div class="field">
+            <label>Presets:</label>
+            <select name="Preset" id="preset" value="{{selected_preset}}"
+                    onchange='document.getElementById("preset_input").value=document.getElementById("preset").value;this.form.submit()'>
+                <option value="" selected disabled hidden>Choose a Preset</option>
+                {% for preset in preset_list %}
+                {% if preset.id == selected_preset %}
+                <option value={{preset.id}} selected="selected">{{preset.title}}</option>
+                {% else %}
+                <option value={{preset.id}}>{{preset.title}}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <!--Two hidden inputs below are for passing values for preset and selected project on form submit-->
+        <div class="field" style="height=0;display:none">
+            <input type="text" id="input" value="{{selected_project}}" name="selected_project"
+                   hidden="hidden"
+                   placeholder="Project Goes Here..."
+                   readonly="readonly"><br>
+        </div>
+        <div class="field" style="height=0;display:none">
+            <input type="text" id="preset_input" value="{{selected_preset}}" name="selected_preset"
+                   hidden="hidden"
+                   placeholder="Preset Goes Here..."
+                   readonly="readonly"><br>
+        </div>
+
+        <div class="ui segment">
+            <div class="ui two column very relaxed grid">
+                <div class="column">
+                    {% include 'nested_list.html' %}
+                </div>
+                <div class="column">
+                   <textarea id="json_review" name="json_review" rows="45" style="position:relative;padding:1em;background-color:#FFFFCC;">
+                   {{json_snippet}}
+                   </textarea>
+                 <div style="padding: 30px;text-align: center;">
+                   <button class="ui blue button" name="update_button" type="submit" value="record">Record</button>
+                 </div>
+                </div>
+            </div>
+            <div class="ui vertical divider">
+                or
+            </div>
+        </div>
+
+    </form>
+    <form action="/update/{{selected_project}}" method="post">
+        <button class="ui green button" name="update_button" type="submit" value="clone">Clone</button>
+        <button class="ui red button" name="update_button" type="submit" value="delete">Delete</button>
+        <button class="ui blue button" name="update_button" type="submit" value="reset">Reset</button>
+        <button class="ui blue button" name="update_button" type="submit" value="write">Write to Disk</button>
+    </form>
+    <hr>
+</div>
+<script src="{{ url_for('static', filename='js/checker.js') }}"></script>
+<script src="{{ url_for('static', filename='js/message.js') }}"></script>
+</body>
+
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clone a project</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+</head>
+
+<body>
+<div style="margin-top: 50px;" class="ui container">
+    <h1 class="ui center aligned header">Clone</h1>
+
+    <form class="ui form" action="/clone" method="post">
+        <div class="field">
+            <label>Project To Clone:</label>
+           <input type="text" id="project" value="{{selected_project}}" name="project"
+                   placeholder="Project Goes Here..."
+                   readonly="readonly"><br>
+        </div>
+        <div class="field">
+            <label>Clone into New Project:</label>
+            <input type="text" id="clone" name="clone"
+                   placeholder="Name of new project...">
+        </div>
+        <button class="ui green button" name="clone_button" type="submit">Clone</button>
+    </form>
+    <hr>
+</div>
+</body>
+
+</html>
