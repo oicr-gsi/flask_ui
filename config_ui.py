@@ -119,6 +119,12 @@ def parse_override(value):
         return None
     elif value == 'on':
         return True
+    elif value in (True, False):
+        return value
+    elif value.isnumeric():
+        return int(value)
+    elif value[0].isdigit():
+        return float(value)
     else:
         return value
 
@@ -195,7 +201,6 @@ def select():
     if request.method == 'POST':
         project = request.form.get("selected_project")  # parse project
         preset = request.form.get("selected_preset")  # parse preset
-        json_text = "Selection Updated " + project if project else "Selection Updated"
         messages = []
         '''Process selected project'''
         if project:
