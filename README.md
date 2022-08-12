@@ -1,6 +1,6 @@
-## Flask-based congiguration UI
+﻿## Flask-based configuration UI
 
-This app aims to provide a graphical inerface for customization of projectconfig file used by shesmu.
+This app aims to provide a graphical interface for customization of **projectconfig** file used by shesmu.
 The interface requires flask installation so it can run in a web browser locally. Some settings also
 need to be specified, see INSTALL for that. 
 
@@ -63,7 +63,7 @@ You may also type **deactivate** to terminate the python virtual environment use
 ![usage_flowchart](images/ui_flowchart.png)
 
 The UI shows a couple of drop-down lists, one for projects and the other one for presets
-Steps for a session may onclude some or all of the following:
+Steps for a session may include some or all of the following:
 
 * Select a project, review the configuration. Make your selection of parameters and enable
   or disable individual components of computational pipelines
@@ -71,7 +71,7 @@ Steps for a session may onclude some or all of the following:
 * Apply a preset if applicable
 * Create a configuration for a new project by cloning, then applying a preset
   or changing individual parameters
-* Click Apply, that will update the projectconfig on disk
+* Click Apply, that will update the **projectconfig** on disk
 * Note that if you check/uncheck some boxes you will need to click Apply
   otherwise your changes will be lost if you select another project
 * Go to your local directory with shesmu config files, create a branch, review 
