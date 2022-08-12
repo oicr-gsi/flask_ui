@@ -73,7 +73,7 @@ def obtain_enabled(project_json: object, parent=""):
                 texts.append(dict(id="reference_assembly", value=assembly))
                 continue
             boxes.append(dict(id=entry_id, status=True))
-            nested = obtain_enabled(project_json[entry], entry + "$")
+            nested = obtain_enabled(project_json[entry], entry + "$")  #TODO: fix, this is hard-coded
             boxes = boxes + nested[0]
             texts = texts + nested[1]
             opts = opts + nested[2]
@@ -132,13 +132,15 @@ def parse_override(value):
 """Subroutine to update a dict for inserting into main config"""
 
 
-def update_project(to_update, overrides):
+def update_project(to_update, overrides, master_overrides=None):
     """
     Update a nested dictionary or similar mapping.
     reference gets a special treatment. What is annoying is that for pipelines, values may be
     either Boolean or dict in this implementation. Hence more checks, not sure if this can be
     more compact.
     """
+    if not master_overrides:
+        master_overrides = overrides
     toReturn = copy.deepcopy(to_update)
     for key, value in to_update.items():
         """If we have a dict for an entry, recurse inside"""
@@ -147,15 +149,13 @@ def update_project(to_update, overrides):
                 toReturn[key] = {}
                 toReturn[key][overrides[key].upper()] = [overrides['reference_assembly']]
             elif isinstance(value, dict):
-                for subkey in value.keys():
-                    if isinstance(value[subkey], dict):
-                        if subkey in overrides.keys():
-                            toReturn[key][subkey] = update_project(value[subkey], overrides[subkey])
-                        else:
-                            toReturn[key][subkey] = update_project(value[subkey], {})  # Disable all sub-pipelines
-                        continue
-                    if isinstance(overrides[key], dict) and overrides[key].get(subkey):
-                        toReturn[key][subkey] = parse_override(overrides[key][subkey])
+                if key in master_overrides.keys():
+                    if isinstance(master_overrides[key], dict):
+                        toReturn[key] = update_project(value, master_overrides[key], master_overrides)
+                    else:
+                        toReturn[key] = update_project(value, master_overrides, master_overrides)
+                else:
+                    continue
             else:
                 toReturn[key] = parse_override(overrides[key])
         else:
@@ -164,6 +164,7 @@ def update_project(to_update, overrides):
             else:
                 toReturn[key] = False
     return toReturn
+
 
 
 '''Index generation, the landing page to start an editing session'''
@@ -201,46 +202,23 @@ def select():
     if request.method == 'POST':
         project = request.form.get("selected_project")  # parse project
         preset = request.form.get("selected_preset")  # parse preset
+        updated_project = request.form.get("updated_project")
         messages = []
-        '''Process selected project'''
-        if project:
-            '''Process all changes on the form for the project which gets updated'''
-            if request.form.get('update_button') and request.form['update_button'] == "record":
-                form_data = request.form
-                form_dict = form_data.to_dict(flat=True)
-                """
-                    Debug messages, uncomment if needed
-                    
-                print("Got Record button clicked, saving changes From the form:")
-                formJString = json.dumps(form_dict)
-                print(formJString)
-                print("And current project config for " + form_dict['updatedProject'] + " is:")
-                print(config["values"][form_dict['updatedProject']])
-                print("The update looks like this:")
-                print(form_dict) 
-                
-                """
+        form_data = request.form
+        form_dict = form_data.to_dict(flat=True)
+        print("The update looks like this:")
+        print(form_dict)
 
-                updatedConfig = update_project(defaults, parseUpdate(form_dict))
-
-                """
-                print("Updated JSON:")
-                myJSON = json.dumps(updatedConfig, indent=4)
-                print(myJSON) 
-                
-                Main Updating step below:
-                
-                """
-                config["values"][form_dict['updatedProject']].update(updatedConfig)
-                messages.append(dict(title="Warning", body="Changes NOT dumped to disk but retained in memory"))
+        '''Prepare the data for rendering:'''
+        if preset and project == updated_project:
+            preset_snippet = presets["presets"][preset]
             json_snippet = config["values"][project]
-            '''Prepare the data for rendering:'''
-            if preset:
-                preset_snippet = presets["presets"][preset]
-                json_snippet.update(preset_snippet)
-                messages.append(dict(title="Warning", body="Preset " + preset + " was applied to project " + project))
-            enabled_workflows = obtain_enabled(json_snippet)
-            json_text = json.dumps(json_snippet, sort_keys=True, indent=2)
+            json_snippet.update(preset_snippet)
+            config["values"][project].update(json_snippet)
+            messages.append(dict(title="Warning", body="Preset " + preset + " was applied to project " + project))
+        json_snippet = config["values"][project]
+        enabled_workflows = obtain_enabled(json_snippet)
+        json_text = json.dumps(json_snippet, sort_keys=True, indent=2)
 
         return render_template('base.html', project_list=project_list,
                                preset_list=preset_list,
@@ -299,6 +277,7 @@ def update(project):
     global config
     global config_path
 
+    messages = []
     '''Handle clicks on various update buttons'''
     if request.form['update_button'] == "clone":
         messages = [dict(title="", body="Project " + project + "Is being cloned")]
@@ -320,6 +299,23 @@ def update(project):
         messages = [dict(title="Warning", body="Project " + project + " was Deleted...")]
         print(messages[0]['body'])
         project = project_list[0]['id']
+    elif request.form.get('update_button') and request.form['update_button'] == "record":
+        form_data = request.form
+        form_dict = form_data.to_dict(flat=True)
+        updated_config = update_project(defaults, parseUpdate(form_dict))
+        preset_list = []
+        """
+        Debug messages, uncomment if needed
+        
+        print("Updated JSON:")
+        myJSON = json.dumps(updatedConfig, indent=4)
+        print(myJSON) 
+        
+        Main Updating step below:
+       
+        """
+        config["values"][project].update(updated_config)
+        messages.append(dict(title="Warning", body="Changes NOT dumped to disk but retained in memory"))
     else:
         print("I received some unknown request")
     json_snippet = config["values"][project]

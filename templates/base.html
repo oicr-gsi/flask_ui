@@ -12,16 +12,16 @@
     <!-- Script for refreshing UI state (checkboxes and text values) -->
     <script type="text/javascript">
       window.onload = function() {
-       if(document.forms[0]) {
+       if(document.forms[1]) {
        {% for box in checkbox_list %}
-         if (document.forms[0].{{box.id}}) {
-             document.forms[0].{{box.id}}.checked = "{{box.status}}";
+         if (document.forms[1].{{box.id}}) {
+             document.forms[1].{{box.id}}.checked = "{{box.status}}";
          }
        {% endfor %}
 
        {% for txt in texts_list %}
-         if (document.forms[0].{{txt.id}}) {
-             document.forms[0].{{txt.id}}.value = "{{txt.value}}";
+         if (document.forms[1].{{txt.id}}) {
+             document.forms[1].{{txt.id}}.value = "{{txt.value}}";
          }
        {% endfor %}
          $('.ui.dropdown').dropdown();
@@ -49,7 +49,7 @@
     <form class="ui form" action="/select" method="post">
         <div class="field">
             <label>Select Project</label>
-            <select name="Project" id="projects" value="{{selected_project}}"
+            <select name="selectedProject" id="projects" value="{{selected_project}}"
                     onchange='document.getElementById("input").value=document.getElementById("projects").value;
                               document.getElementById("preset_input").value="";this.form.submit()'>
                 {% for project in project_list %}
@@ -62,11 +62,11 @@
             </select>
             <!--This hidden input holds the name of the project being updated, will keep the value on selecting
                 another project and can be used to update the values when user navigates away-->
-            <input type="hidden" id="updated_project" name="updatedProject" value={{selected_project}}>
+            <input type="hidden" id="updated_project" name="updated_project" value={{selected_project}}>
         </div>
         <div class="field">
             <label>Presets:</label>
-            <select name="Preset" id="preset" value="{{selected_preset}}"
+            <select name="selectedPreset" id="preset" value="{{selected_preset}}"
                     onchange='document.getElementById("preset_input").value=document.getElementById("preset").value;this.form.submit()'>
                 <option value="" selected disabled hidden>Choose a Preset</option>
                 {% for preset in preset_list %}
@@ -91,7 +91,8 @@
                    placeholder="Preset Goes Here..."
                    readonly="readonly"><br>
         </div>
-
+        </form>
+        <form class="ui form" action="/update/{{selected_project}}" method="post">
         <div class="ui segment">
             <div class="ui two column very relaxed grid">
                 <div class="column">
@@ -101,21 +102,16 @@
                    <textarea id="json_review" name="json_review" rows="45" style="position:relative;padding:1em;background-color:#FFFFCC;">
                    {{json_snippet}}
                    </textarea>
-                 <div style="padding: 30px;text-align: center;">
-                   <button class="ui blue button" name="update_button" type="submit" value="record">Record</button>
-                 </div>
                 </div>
             </div>
             <div class="ui vertical divider">
                 or
             </div>
         </div>
-
-    </form>
-    <form action="/update/{{selected_project}}" method="post">
         <button class="ui green button" name="update_button" type="submit" value="clone">Clone</button>
         <button class="ui red button" name="update_button" type="submit" value="delete">Delete</button>
         <button class="ui blue button" name="update_button" type="submit" value="reset">Reset</button>
+        <button class="ui blue button" name="update_button" type="submit" value="record">Record</button>
         <button class="ui blue button" name="update_button" type="submit" value="write">Write to Disk</button>
     </form>
     <hr>
