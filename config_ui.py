@@ -204,10 +204,6 @@ def select():
         preset = request.form.get("selected_preset")  # parse preset
         updated_project = request.form.get("updated_project")
         messages = []
-        form_data = request.form
-        form_dict = form_data.to_dict(flat=True)
-        print("The update looks like this:")
-        print(form_dict)
 
         '''Prepare the data for rendering:'''
         if preset and project == updated_project:
