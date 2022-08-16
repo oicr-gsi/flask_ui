@@ -299,9 +299,13 @@ def update(project):
         form_data = request.form
         form_dict = form_data.to_dict(flat=True)
         updated_config = update_project(defaults, parseUpdate(form_dict))
-        preset_list = []
+
         """
         Debug messages, uncomment if needed
+        
+        form_json = json.dumps(form_dict)
+        print("That is what we have submitted:")
+        print(form_json) 
         
         print("Updated JSON:")
         myJSON = json.dumps(updatedConfig, indent=4)
@@ -310,6 +314,7 @@ def update(project):
         Main Updating step below:
        
         """
+
         config["values"][project].update(updated_config)
         messages.append(dict(title="Warning", body="Changes NOT dumped to disk but retained in memory"))
     else:
