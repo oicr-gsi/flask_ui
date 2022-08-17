@@ -64,7 +64,7 @@ def obtain_enabled(project_json: object, parent=""):
         if project_json.get(entry) is None:
             continue
         entry_id = parent + entry
-        if (type(project_json[entry]) is dict):
+        if isinstance(project_json[entry], dict):
             '''Treat reference in a special way, may instead check for type in config['default']'''
             if entry == "reference_for_species":
                 species = list(project_json[entry].keys())[0]
@@ -73,7 +73,7 @@ def obtain_enabled(project_json: object, parent=""):
                 texts.append(dict(id="reference_assembly", value=assembly))
                 continue
             boxes.append(dict(id=entry_id, status=True))
-            nested = obtain_enabled(project_json[entry], entry + "$")  #TODO: fix, this is hard-coded
+            nested = obtain_enabled(project_json[entry], entry + "$")  # TODO: fix, this is hard-coded
             boxes = boxes + nested[0]
             texts = texts + nested[1]
             opts = opts + nested[2]
@@ -83,7 +83,7 @@ def obtain_enabled(project_json: object, parent=""):
             if type(project_json[entry]) in [str, int, float]:
                 texts.append(dict(id=entry_id, value=project_json[entry]))
             if isinstance(project_json[entry], list):
-                texts.append(dict(id=entry_id, value=project_json[entry][0]))
+                texts.append(dict(id=entry_id, value=",".join(project_json[entry][0])))
 
     return boxes, texts, opts
 
@@ -111,7 +111,10 @@ def parseUpdate(update):
     return parsedDict
 
 
-"""Small utility to translate form data into proper dict flags"""
+"""
+  Small utility to translate form data into proper dict flags
+  ATTENTION: if a string with commas is passed, it will be converted to list
+"""
 
 
 def parse_override(value):
@@ -121,6 +124,8 @@ def parse_override(value):
         return True
     elif value in (True, False):
         return value
+    elif isinstance(value, str) and ',' in value:
+        return [value.split(',')]
     elif value.isnumeric():
         return int(value)
     elif value[0].isdigit():
@@ -164,7 +169,6 @@ def update_project(to_update, overrides, master_overrides=None):
             else:
                 toReturn[key] = False
     return toReturn
-
 
 
 '''Index generation, the landing page to start an editing session'''
