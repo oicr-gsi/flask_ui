@@ -1,0 +1,4 @@
+env/
+venv/
+ui_config.cfg
+__pycache__/

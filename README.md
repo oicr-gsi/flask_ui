@@ -4,9 +4,26 @@ This app aims to provide a graphical interface for customization of **projectcon
 The interface requires flask installation so it can run in a web browser locally. Some settings also
 need to be specified, see INSTALL for that. 
 
-[Installing Flask](https://flask.palletsprojects.com/en/2.1.x/installation/)
+## Setting up for Development 
  
 [Creating Virtual Environment](https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-and-using-virtual-environments)
+
+Launch the virtual environment and install Flask:
+
+```
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+Configure the application's settings file:
+
+```
+CONFIG_FILE_DIRECTORY=/home/USERNAME/secrets
+cp ui-config.cfg.example "${CONFIG_FILE_DIRECTORY}"/ui-config.cfg
+```
+
+Modify the new file to point to the locations of the shesmu configuration files (currently in
+spb-seqware-production).
 
 ## Launching the App
 
