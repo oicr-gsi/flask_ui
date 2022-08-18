@@ -4,9 +4,9 @@ This app aims to provide a graphical interface for customization of **projectcon
 The interface requires flask installation so it can run in a web browser locally. Some settings also
 need to be specified, see INSTALL for that. 
 
-![Installing Flask](https://flask.palletsprojects.com/en/2.1.x/installation/)
+[Installing Flask](https://flask.palletsprojects.com/en/2.1.x/installation/)
  
-![Creating Virtual Environment](https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-and-using-virtual-environments)
+[Creating Virtual Environment](https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-and-using-virtual-environments)
 
 ## Launching the App
 
