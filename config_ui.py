@@ -1,10 +1,19 @@
-from flask import Flask, render_template, request
+from __future__ import absolute_import
+import copy
 import json
 import os
 import sys
-import copy
+from flask import Flask, render_template, request
+from internal import supported_types
 
-app = Flask(__name__)
+def create_app(debug=True):
+    app = Flask(__name__)
+    with app.app_context():
+        app.config.from_envvar('UICONFIG_SETTINGS')
+        return app
+
+
+app = create_app()
 project_list = []
 preset_list = []
 config = None
@@ -67,13 +76,13 @@ def obtain_enabled(project_json: object, parent=""):
         if isinstance(project_json[entry], dict):
             '''Treat reference in a special way, may instead check for type in config['default']'''
             if entry == "reference_for_species":
-                species = list(project_json[entry].keys())[0]
+                species = list(project_json[entry].keys())[0]  # TODO we need to handle multiple species
                 assembly = project_json[entry][species][0]
                 opts.append(dict(id="select-org", value=species))
                 texts.append(dict(id="reference_assembly", value=assembly))
                 continue
             boxes.append(dict(id=entry_id, status=True))
-            nested = obtain_enabled(project_json[entry], entry + "$")  # TODO: fix, this is hard-coded
+            nested = obtain_enabled(project_json[entry], entry + supported_types.SEP)
             boxes = boxes + nested[0]
             texts = texts + nested[1]
             opts = opts + nested[2]
@@ -88,7 +97,7 @@ def obtain_enabled(project_json: object, parent=""):
     return boxes, texts, opts
 
 
-"""Make another level of dict for entries with parent"""
+""" De-serialize parent/child ids, make another level of dict for entries with parent """
 
 
 def parseUpdate(update):
@@ -96,9 +105,9 @@ def parseUpdate(update):
     for key, value in update.items():
         if key in ["Project", "updatedProject", "selected_preset", "json_review", "update_button"]:
             continue
-        if isinstance(value, str) and value == 'on':  # TODO: this is hard-coded
+        if isinstance(value, str) and value == 'on':
             value = True
-        parentChild = key.split('$')  # TODO: this is hard-coded
+        parentChild = key.split(supported_types.SEP)
         if len(parentChild) == 2:
             if parsedDict.get(parentChild[0]) and isinstance(parsedDict[parentChild[0]], dict):
                 parsedDict[parentChild[0]].update({parentChild[1]: value})
@@ -306,15 +315,15 @@ def update(project):
 
         """
         Debug messages, uncomment if needed
-        
+        """
         form_json = json.dumps(form_dict)
         print("That is what we have submitted:")
         print(form_json) 
-        
+
         print("Updated JSON:")
-        myJSON = json.dumps(updatedConfig, indent=4)
+        myJSON = json.dumps(updated_config, indent=4)
         print(myJSON) 
-        
+        """ 
         Main Updating step below:
        
         """

@@ -50,10 +50,6 @@
                         <label>enable_manta</label>
                     </li>
                     <br>
-                    <li class="ui checkbox">
-                        <input type="checkbox" id="fulldepth_analysis$enable_mixcr" name="fulldepth_analysis$enable_mixcr" class="subOption">
-                        <label>enable_mixcr</label>
-                    </li>
                     <br>
                     <li class="ui checkbox">
                         <input type="checkbox" id="fulldepth_analysis$enable_msisensor" name="fulldepth_analysis$enable_msisensor" class="subOption">
@@ -153,11 +149,20 @@
                         </div>
                         <input type="text" id="swgs_sequencer$contents" size="8" name="swgs_sequencer$contents" placeholder="null">
                     </li>
-                    <li class="inline field">
-                        <div class="ui right pointing label">
-                            type
-                        </div>
-                        <input type="text" id="swgs_sequencer$type" size="14" name="swgs_sequencer$type" placeholder="NONE">
+                    <li>
+                      <div class="ui right pointing label">
+                        type
+                      </div>
+                      <div class="ui dropdown">
+                       <input type="hidden" name="swgs_sequencer$type">
+                       <i class="dropdown icon"></i>
+                       <div class="default text" id="swgs_sequencer$selected_type">NONE</div>
+                       <div class="menu">
+                         <div class="item" data-value="NONE">NONE</div>
+                         <div class="item" data-value="MYSEQ_ONLY">MYSEQ_ONLY</div>
+                         <div class="item" data-value="ALL">ALL</div>
+                       </div>
+                       </div>
                     </li>
                 </ul>
             </li>
@@ -188,7 +193,16 @@
                     <div class="ui right pointing label">
                         type
                     </div>
-                    <input type="text" id="linkout_to_simpsonlab$type" size="8" name="linkout_to_simpsonlab$type" placeholder="SKIP">
+                    <div class="ui dropdown">
+                       <input type="hidden" name="linkout_to_simpsonlab$type">
+                       <i class="dropdown icon"></i>
+                       <div class="default text" id="linkout_to_simpsonlab$selected_type">SKIP</div>
+                       <div class="menu">
+                         <div class="item" data-value="LINK_WITH_DONOR_ID">LINK_WITH_DONOR_ID</div>
+                         <div class="item" data-value="LINK_WITH_OICR_ID">LINK_WITH_OICR_ID</div>
+                         <div class="item" data-value="SKIP">SKIP</div>
+                       </div>
+                    </div>
                 </li>
             </ul>
         </ul>
@@ -222,11 +236,18 @@
     </li>
     <li class="ui right labeled input" style="width: 150px">
         <input type="text" id="reference_assembly" name="reference_assembly" placeholder="hg38" style="resize: none;">
+        <script>
+          var selected = document.getElementById('reference_for_species');
+          selected.addEventListener("change", function(){
+          var value=selected.options[select.selectIndex].value;
+          document.getElementById('hidden_reference_for_species').value = value;
+        });
+        </script>
         <div class="ui dropdown label" id="select-org">
             <div class="text" id="reference_for_species">HOMO_SAPIENS</div>
             <input type="hidden" id="hidden_reference_for_species" name="reference_for_species">
             <i class="dropdown icon"></i>
-            <div class="menu" onselect="static/js/menu_select.js">
+            <div class="menu"> <!-- onselect="static/js/menu_select.js()">-->
                 <div class="item" name="HOMO SAPIENS">HOMO SAPIENS</div>
                 <div class="item" name="MUS MUSCULUS">MUS MUSCULUS</div>
                 <div class="item" name="ARABIDOPSIS THALIANA">ARABIDOPSIS THALIANA</div>
@@ -236,4 +257,4 @@
             </div>
         </div>
     </li>
-</ul>
+</ul>    
