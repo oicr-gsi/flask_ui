@@ -75,11 +75,19 @@ def obtain_enabled(project_json: object, parent=""):
         entry_id = parent + entry
         if isinstance(project_json[entry], dict):
             '''Treat reference in a special way, may instead check for type in config['default']'''
-            if entry == "reference_for_species":
+            if entry == "reference_for_species": # TODO condition this on type (algebraic or msas)
                 species = list(project_json[entry].keys())[0]  # TODO we need to handle multiple species
                 assembly = project_json[entry][species][0]
-                opts.append(dict(id="select-org", value=species))
+                opts.append(dict(id="reference_for_species_selector", value=species))
                 texts.append(dict(id="reference_assembly", value=assembly))
+                continue
+            if entry in ('swgs_sequencer', 'linkout_to_simpsonlab'):
+                opts.append(dict(id='-'.join([entry, "type_selector"]), #TODO figure out separator, which char to use
+                                 value=project_json[entry]["type"]))
+                boxes.append(dict(id=entry_id, status=True))
+                if isinstance(project_json[entry]['contents'], list):
+                    texts.append(dict(id=supported_types.SEP.join([entry, 'contents']),
+                                      value=",".join(project_json[entry]['contents'][0])))
                 continue
             boxes.append(dict(id=entry_id, status=True))
             nested = obtain_enabled(project_json[entry], entry + supported_types.SEP)
@@ -315,7 +323,6 @@ def update(project):
 
         """
         Debug messages, uncomment if needed
-        """
         form_json = json.dumps(form_dict)
         print("That is what we have submitted:")
         print(form_json) 
@@ -323,7 +330,6 @@ def update(project):
         print("Updated JSON:")
         myJSON = json.dumps(updated_config, indent=4)
         print(myJSON) 
-        """ 
         Main Updating step below:
        
         """

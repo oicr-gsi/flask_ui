@@ -153,16 +153,16 @@
                       <div class="ui right pointing label">
                         type
                       </div>
-                      <div class="ui dropdown">
-                       <input type="hidden" name="swgs_sequencer$type">
-                       <i class="dropdown icon"></i>
-                       <div class="default text" id="swgs_sequencer$selected_type">NONE</div>
-                       <div class="menu">
-                         <div class="item" data-value="NONE">NONE</div>
-                         <div class="item" data-value="MYSEQ_ONLY">MYSEQ_ONLY</div>
-                         <div class="item" data-value="ALL">ALL</div>
-                       </div>
-                       </div>
+                      <div class="ui dropdown" id="swgs_sequencer-type_selector">
+                         <div class="default text" id="swgs_sequencer$type">NONE</div>
+                         <input type="hidden" id="hidden_swgs_sequencer$type" name="swgs_sequencer$type">
+                         <i class="dropdown icon"></i>
+                         <div class="menu">
+                           <div class="item" data-value="NONE">NONE</div>
+                           <div class="item" data-value="MISEQ_ONLY">MISEQ_ONLY</div>
+                           <div class="item" data-value="ALL">ALL</div>
+                         </div>
+                      </div>
                     </li>
                 </ul>
             </li>
@@ -193,10 +193,10 @@
                     <div class="ui right pointing label">
                         type
                     </div>
-                    <div class="ui dropdown">
-                       <input type="hidden" name="linkout_to_simpsonlab$type">
+                    <div class="ui dropdown" id="linkout_to_simpsonlab-type_selector">
+                       <input type="hidden" id="hidden_linkout_to_simpsonlab$type" name="linkout_to_simpsonlab$type">
                        <i class="dropdown icon"></i>
-                       <div class="default text" id="linkout_to_simpsonlab$selected_type">SKIP</div>
+                       <div class="default text" id="linkout_to_simpsonlab$type">SKIP</div>
                        <div class="menu">
                          <div class="item" data-value="LINK_WITH_DONOR_ID">LINK_WITH_DONOR_ID</div>
                          <div class="item" data-value="LINK_WITH_OICR_ID">LINK_WITH_OICR_ID</div>
@@ -236,18 +236,11 @@
     </li>
     <li class="ui right labeled input" style="width: 150px">
         <input type="text" id="reference_assembly" name="reference_assembly" placeholder="hg38" style="resize: none;">
-        <script>
-          var selected = document.getElementById('reference_for_species');
-          selected.addEventListener("change", function(){
-          var value=selected.options[select.selectIndex].value;
-          document.getElementById('hidden_reference_for_species').value = value;
-        });
-        </script>
-        <div class="ui dropdown label" id="select-org">
+        <div class="ui dropdown label" id="reference_for_species_selector">
             <div class="text" id="reference_for_species">HOMO_SAPIENS</div>
             <input type="hidden" id="hidden_reference_for_species" name="reference_for_species">
             <i class="dropdown icon"></i>
-            <div class="menu"> <!-- onselect="static/js/menu_select.js()">-->
+            <div class="menu">
                 <div class="item" name="HOMO SAPIENS">HOMO SAPIENS</div>
                 <div class="item" name="MUS MUSCULUS">MUS MUSCULUS</div>
                 <div class="item" name="ARABIDOPSIS THALIANA">ARABIDOPSIS THALIANA</div>
