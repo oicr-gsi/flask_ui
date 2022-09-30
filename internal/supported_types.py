@@ -5,8 +5,24 @@
  classes provide methods for rendering html elements and hold the internal
  values for displaying in UI
 
+
 """
 SEP = '$'
+
+
+def get_default_value(entryType: str, entryValue=None):
+    if entryType == 'b':
+        return B.get_default()
+    if entryType == 'qi':
+        return QI.get_default()
+    if entryType == 's':
+        return S.get_default()
+    if entryType == 'algebraic':
+        return ALGEBRAIC.get_default(entryValue)
+    if entryType == 'i':
+        return I.get_defaults()
+    if entryType == 'msas':
+        return MSAS.get_default(entryValue)
 
 
 class QI:
@@ -27,6 +43,10 @@ class QI:
                    <input type="text" id="{self.parented_id}" name="{self.my_id}" size="3"> \
                   </li>'
 
+    @staticmethod
+    def get_default():
+        return None
+
 
 class B:
     def __init__(self, value: bool, my_id: str, parent=None):
@@ -43,6 +63,10 @@ class B:
                   <input type="checkbox" id="{self.parented_id}" name="{self.my_id}" class="subOption"> \
                   <label>{self.my_id}</label> \
                 </li>'
+
+    @staticmethod
+    def get_default():
+        return False
 
 
 class S:
@@ -64,6 +88,10 @@ class S:
                    <input type="text" id="{self.parented_id}" name="{self.parented_id}" size="8" placeholder="{self.placeholder}"> \
                  </li>'
 
+    @staticmethod
+    def get_default():
+        return "Enter Value"
+
 
 class ALGEBRAIC:
     def __init__(self, value: str, my_id: str, parent: str, placeholder: str):
@@ -79,22 +107,31 @@ class ALGEBRAIC:
     def render_element(self):
         return f'<li class="ui checkbox"> \
                 <input type="checkbox" id="{self.parented_id}" name="{self.parented_id}" class="option"> \
-                <label>linkout_to_simpsonlab</label> \
+                <label>{self.my_id}</label> \
                 </li> \
                 <ul class="nested" style="list-style: none;"> \
                 <li class="inline field"> \
                     <div class="ui right pointing label"> \
                         contents \
                     </div> \
-                    <input type="text" id="{self.my_id}{SEP}contents" size="8" name="{self.my_id}{SEP}$contents" placeholder="null"> \
+                    <input type="text" id="{self.my_id}{SEP}contents" size="8" name="{self.my_id}{SEP}contents" placeholder="null"> \
                 </li> \
                 <li class="inline field"> \
                     <div class="ui right pointing label"> \
                         type \
                     </div> \
-                    <input type="text" id="{self.my_id}{SEP}type" size="8" name="{self.my_id}{SEP}type" placeholder="SKIP"> \
+                    <input type="text" id="{self.my_id}{SEP}type" size="8" name="{self.my_id}{SEP}type" placeholder="{self.placeholder}"> \
                 </li> \
                 </ul>'
+
+    @staticmethod
+    def get_default(entry):
+        last_element = "NOTSET"
+        """Set last_element to id of the last entry with value null"""
+        for key, value in entry.items():
+            if value == "null" or value is None:
+                last_element = key
+        return {"contents": None, "type": last_element}
 
 
 class I:
@@ -114,6 +151,10 @@ class I:
                    </div> \
                    <input type="text" id="{self.parented_id}" name="{self.parented_id}" size="2" placeholder="0"> \
                   </li>'
+
+    @staticmethod
+    def get_defaults():
+        return 0
 
 
 class MSAS:

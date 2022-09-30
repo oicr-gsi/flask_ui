@@ -20,6 +20,5 @@ UICONFIG_SETTINGS points to a config file which should have the following variab
 
 CONFIG_PATH=[Path to the config file which sits in a local cloned source tree for spb-seqware-production repo]
 PRESET_PATH=[Path to a .conf file with presets used to configure the projects]
-DEFAULTS_PATH=[Path to a .conf file with pre-filled defaults]
 
 

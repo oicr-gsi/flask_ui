@@ -5,6 +5,8 @@ import os
 import sys
 from flask import Flask, render_template, request
 from internal import supported_types
+from internal import update_ui
+
 
 def create_app(debug=True):
     app = Flask(__name__)
@@ -19,7 +21,6 @@ preset_list = []
 config = None
 config_path = None
 defaults = None
-defaults_path = None
 presets = None
 
 '''Get all projects, they are under values key in config object'''
@@ -31,7 +32,6 @@ def init():
     global config
     global config_path
     global defaults
-    global defaults_path
     global presets
     preset_list = []
 
@@ -39,13 +39,18 @@ def init():
         app.config.from_envvar('UICONFIG_SETTINGS')
         config_path = app.config['CONFIG_PATH']
         preset_path = app.config['PRESET_PATH']
-        defaults_path = app.config['DEFAULTS_PATH']
         with open(os.path.join(os.path.dirname(sys.argv[0]), config_path), "r") as f:
             config = json.load(f)
+        """generate_ui init"""
+        config_updater = update_ui.updateUi(config)
+        defaults = config_updater.get_defaults()
         with open(os.path.join(os.path.dirname(sys.argv[0]), preset_path), "r") as pr:
-            presets = json.load(pr)
-        with open(os.path.join(os.path.dirname(sys.argv[0]), defaults_path), "r") as dp:
-            defaults = json.load(dp)
+            current_presets = json.load(pr)
+        presets = config_updater.vetted_presets(current_presets)
+        if current_presets != presets:
+            print("Presets were changed, writing to disk...")
+            with open(os.path.join(os.path.dirname(sys.argv[0]), preset_path), "w") as fp:
+                json.dump(presets, fp, sort_keys=True, indent=2)
         refresh()
         for r in presets["presets"]:
             preset_list.append(dict(id=r, title=r))
@@ -81,7 +86,7 @@ def obtain_enabled(project_json: object, parent=""):
                 opts.append(dict(id="reference_for_species_selector", value=species))
                 texts.append(dict(id="reference_assembly", value=assembly))
                 continue
-            if entry in ('swgs_sequencer', 'linkout_to_simpsonlab'):
+            if entry in ('swgs_sequencer', 'linkout_to_simpsonlab'): #TODO check type instead
                 opts.append(dict(id='-'.join([entry, "type_selector"]), #TODO figure out separator, which char to use
                                  value=project_json[entry]["type"]))
                 boxes.append(dict(id=entry_id, status=True))
