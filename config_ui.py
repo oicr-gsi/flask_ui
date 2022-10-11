@@ -253,7 +253,6 @@ def append_refs(project: str):
         my_refs = config_updater.get_assemblies()
         for sp in range(0, len(my_refinfo)):
             my_addon += supported_types.get_rendered(None, supported_types.REF_KEY, 'msas', sp, my_refs)
-            print(f'Added section {sp}')
             """ One break b/w species selectors is needed but with two the UI looks better """
             if sp < (len(my_refinfo) - 1):
                 my_addon += "<br/><br/>"
@@ -404,8 +403,6 @@ def update(project):
         form_data = request.form
         form_dict = form_data.to_dict(flat=True)
         parsed_update = parseUpdate(form_dict)
-        print("Parsed Update:")
-        print(parsed_update)
         updated_config = update_project(defaults, parsed_update)
 
         """
