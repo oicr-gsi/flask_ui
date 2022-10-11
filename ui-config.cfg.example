@@ -1,3 +1,2 @@
 CONFIG_PATH=<full path to project_info.jsonconfig file>
 PRESET_PATH=<full path to project_presets.conf file>
-DEFAULTS_PATH=<full path to project_defaults.conf file>

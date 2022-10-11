@@ -2,7 +2,9 @@ from __future__ import absolute_import
 import copy
 import json
 import os
+import re
 import sys
+from bs4 import BeautifulSoup as Bs
 from flask import Flask, render_template, request
 from internal import supported_types
 from internal import update_ui
@@ -22,8 +24,9 @@ config = None
 config_path = None
 defaults = None
 presets = None
+config_updater = None
 
-'''Get all projects, they are under values key in config object'''
+"""Get all projects, they are under values key in config object"""
 
 
 def init():
@@ -33,62 +36,69 @@ def init():
     global config_path
     global defaults
     global presets
+    global config_updater
     preset_list = []
 
     if not project_list:
         app.config.from_envvar('UICONFIG_SETTINGS')
         config_path = app.config['CONFIG_PATH']
         preset_path = app.config['PRESET_PATH']
-        with open(os.path.join(os.path.dirname(sys.argv[0]), config_path), "r") as f:
+        with open(os.path.join(os.path.dirname(sys.argv[0]), config_path), 'r') as f:
             config = json.load(f)
-        """generate_ui init"""
+        """ generate ui-updating object """
         config_updater = update_ui.updateUi(config)
         defaults = config_updater.get_defaults()
-        with open(os.path.join(os.path.dirname(sys.argv[0]), preset_path), "r") as pr:
+        with open(os.path.join(os.path.dirname(sys.argv[0]), preset_path), 'r') as pr:
             current_presets = json.load(pr)
         presets = config_updater.vetted_presets(current_presets)
+        """ if presets were changed, save the updates to disk """
         if current_presets != presets:
             print("Presets were changed, writing to disk...")
-            with open(os.path.join(os.path.dirname(sys.argv[0]), preset_path), "w") as fp:
+            with open(os.path.join(os.path.dirname(sys.argv[0]), preset_path), 'w') as fp:
                 json.dump(presets, fp, sort_keys=True, indent=2)
         refresh()
-        for r in presets["presets"]:
+        for r in presets['presets']:
             preset_list.append(dict(id=r, title=r))
 
 
-'''Reload project_list from global config'''
+"""Reload project_list from global config"""
 
 
 def refresh():
     global project_list
     global config
     project_list = []
-    for p in config["values"]:
+    for p in config['values']:
         project_list.append(dict(id=p, title=p))
 
 
-'''Check what we have enabled for a given project and return as a dict'''
+"""Check what we have enabled for a given project and return as a dict"""
 
 
-def obtain_enabled(project_json: object, parent=""):
+def obtain_enabled(project_json: object, parent="") -> object:
+    global config_updater
+
     boxes = []
     texts = []
     opts = []
+    entry_types = config_updater.get_types()
+
     for entry in project_json.keys():
         if project_json.get(entry) is None:
             continue
         entry_id = parent + entry
         if isinstance(project_json[entry], dict):
-            '''Treat reference in a special way, may instead check for type in config['default']'''
-            if entry == "reference_for_species": # TODO condition this on type (algebraic or msas)
-                species = list(project_json[entry].keys())[0]  # TODO we need to handle multiple species
-                assembly = project_json[entry][species][0]
-                opts.append(dict(id="reference_for_species_selector", value=species))
-                texts.append(dict(id="reference_assembly", value=assembly))
+            """Treat reference in a special way"""
+            if entry_types[entry] == 'msas':
+                for sp in range(0, len(project_json[entry])):
+                    species = list(project_json[entry].keys())[sp]
+                    assembly = project_json[entry][species][0]
+                    opts.append(dict(id=f'{entry}_selector{sp}', value=species))
+                    texts.append(dict(id=f'reference_assembly{sp}', value=assembly))
                 continue
-            if entry in ('swgs_sequencer', 'linkout_to_simpsonlab'): #TODO check type instead
-                opts.append(dict(id='-'.join([entry, "type_selector"]), #TODO figure out separator, which char to use
-                                 value=project_json[entry]["type"]))
+            if entry_types[entry] == 'algebraic':
+                opts.append(dict(id='-'.join([entry, "type_selector"]),
+                                 value=project_json[entry]['type']))
                 boxes.append(dict(id=entry_id, status=True))
                 if isinstance(project_json[entry]['contents'], list):
                     texts.append(dict(id=supported_types.SEP.join([entry, 'contents']),
@@ -113,24 +123,25 @@ def obtain_enabled(project_json: object, parent=""):
 """ De-serialize parent/child ids, make another level of dict for entries with parent """
 
 
-def parseUpdate(update):
-    parsedDict = {}
-    for key, value in update.items():
-        if key in ["Project", "updatedProject", "selected_preset", "json_review", "update_button"]:
+def parseUpdate(update_object):
+    parsed_dict = {}
+    for key, value in update_object.items():
+        """ hard-coded, but can be kept as is - we define these names in base.html"""
+        if key in ['Project', 'updatedProject', 'selected_preset', 'json_review', 'update_button']:
             continue
         if isinstance(value, str) and value == 'on':
             value = True
-        parentChild = key.split(supported_types.SEP)
-        if len(parentChild) == 2:
-            if parsedDict.get(parentChild[0]) and isinstance(parsedDict[parentChild[0]], dict):
-                parsedDict[parentChild[0]].update({parentChild[1]: value})
+        parent_child = key.split(supported_types.SEP)
+        if len(parent_child) == 2:
+            if parsed_dict.get(parent_child[0]) and isinstance(parsed_dict[parent_child[0]], dict):
+                parsed_dict[parent_child[0]].update({parent_child[1]: value})
             else:
-                parsedDict[parentChild[0]] = {parentChild[1]: value}
-        elif len(parentChild) == 1:
-            parsedDict[parentChild[0]] = value
+                parsed_dict[parent_child[0]] = {parent_child[1]: value}
+        elif len(parent_child) == 1:
+            parsed_dict[parent_child[0]] = value
         else:
-            print("Broken parentChild key")
-    return parsedDict
+            print("Broken parent_child key")
+    return parsed_dict
 
 
 """
@@ -156,44 +167,103 @@ def parse_override(value):
         return value
 
 
+"""
+ text inputs get submitted even if there are no values entered. 
+ This function filters entries which only have empty strings.
+ Everything else is Ok
+"""
+
+
+def not_only_empty(entry, to_check: dict) -> bool:
+    global config_updater
+    passed_filter = False
+    if entry in config_updater.get_types().keys() and config_updater.get_types()[entry] != 'object':
+        return True
+    for key in to_check.keys():
+        if key in config_updater.get_types().keys():
+            if config_updater.get_types()[key] != 's':
+                passed_filter = True
+            elif to_check[key] != '':
+                passed_filter = True
+    return passed_filter
+
+
 """Subroutine to update a dict for inserting into main config"""
 
 
 def update_project(to_update, overrides, master_overrides=None):
     """
     Update a nested dictionary or similar mapping.
-    reference gets a special treatment. What is annoying is that for pipelines, values may be
-    either Boolean or dict in this implementation. Hence more checks, not sure if this can be
-    more compact.
+    reference_for_species gets a special treatment.
     """
     if not master_overrides:
         master_overrides = overrides
-    toReturn = copy.deepcopy(to_update)
-    for key, value in to_update.items():
-        """If we have a dict for an entry, recurse inside"""
-        if key in overrides.keys():
-            if key == 'reference_for_species':
-                toReturn[key] = {}
-                toReturn[key][overrides[key].upper()] = [overrides['reference_assembly']]
-            elif isinstance(value, dict):
-                if key in master_overrides.keys():
-                    if isinstance(master_overrides[key], dict):
-                        toReturn[key] = update_project(value, master_overrides[key], master_overrides)
+    to_return = copy.deepcopy(to_update)
+    if isinstance(to_update, dict):
+        for key in to_update.keys():
+            if key == supported_types.REF_KEY:
+                updated_refs = {}
+                for over_key in overrides.keys():
+                    if over_key.startswith(supported_types.REF_KEY):
+                        if re.search('\d+$', over_key):
+                            ref_idx = re.search('\d+$', over_key).group(0)
+                            if overrides[f'reference_assembly{ref_idx}']:
+                                updated_refs[overrides[over_key].upper()] = [overrides[f'reference_assembly{ref_idx}']]
+                if len(updated_refs) > 0:
+                    to_return[supported_types.REF_KEY] = updated_refs
+            elif isinstance(to_update[key], dict):
+                if isinstance(overrides, dict):
+                    if key in overrides.keys():
+                        if isinstance(master_overrides, dict):
+                            if key in master_overrides.keys() and not_only_empty(key, to_update[key]):
+                                to_return[key] = update_project(to_update[key],
+                                                                master_overrides[key],
+                                                                master_overrides)
+                            elif not_only_empty(key, to_update[key]):
+                                to_return[key] = update_project(to_update[key],
+                                                                {},
+                                                                master_overrides)
+                        else:
+                            continue
                     else:
-                        toReturn[key] = update_project(value, master_overrides, master_overrides)
+                        to_return[key] = None
                 else:
-                    continue
-            else:
-                toReturn[key] = parse_override(overrides[key])
-        else:
-            if isinstance(toReturn[key], dict):
-                toReturn[key] = None
-            else:
-                toReturn[key] = False
-    return toReturn
+                    to_return[key] = update_project(to_update[key], overrides, master_overrides)
+            elif isinstance(overrides, dict) and key in overrides.keys():
+                to_return[key] = update_project(to_update[key], overrides[key], master_overrides)
+    else:
+        """ Update a single value """
+        to_return = parse_override(overrides)
+    return to_return
 
 
-'''Index generation, the landing page to start an editing session'''
+""" Special function for inserting references into dynamically generated HTML UI """
+
+
+def append_refs(project: str):
+    global config
+    global config_updater
+
+    ui = config_updater.get_ui()
+
+    my_refinfo = config['values'][project][supported_types.REF_KEY]
+    """ We just need to know how many at this point, javascript will fill these in """
+    if isinstance(my_refinfo, dict):
+        my_addon = ""
+        my_refs = config_updater.get_assemblies()
+        for sp in range(0, len(my_refinfo)):
+            my_addon += supported_types.get_rendered(None, supported_types.REF_KEY, 'msas', sp, my_refs)
+            print(f'Added section {sp}')
+            """ One break b/w species selectors is needed but with two the UI looks better """
+            if sp < (len(my_refinfo) - 1):
+                my_addon += "<br/><br/>"
+        ui = ui.replace("REFERENCE_FOR_SPECIES_TAG", my_addon)
+    soup = Bs(ui, "html.parser")
+    pretty_ui = soup.prettify()
+    return pretty_ui
+
+
+""" Index generation, the landing page to start an editing session """
 
 
 @app.route("/")
@@ -203,19 +273,21 @@ def index():
     global config
     project = project_list[0]['id']
     """We need to pass only the enabled pipelines, js script will put the checkmarks accordingly"""
-    json_snippet = config["values"][project]
+    json_snippet = config['values'][project]
     enabled_workflows = obtain_enabled(json_snippet)
     json_text = json.dumps(json_snippet, sort_keys=True, indent=2)
+    nested_list = append_refs(project)
     return render_template('base.html', project_list=project_list,
                            preset_list=preset_list,
                            selected_project=project,
+                           nested_list=nested_list,
                            json_snippet=json_text,
                            checkbox_list=enabled_workflows[0],
                            texts_list=enabled_workflows[1],
                            opts_list=enabled_workflows[2])
 
 
-'''Upon selection of a project or preset update the values in the form'''
+""" Upon selection of a project or preset update the values in the form """
 
 
 @app.route('/select', methods=['POST'])
@@ -226,26 +298,28 @@ def select():
     global defaults
 
     if request.method == 'POST':
-        project = request.form.get("selected_project")  # parse project
-        preset = request.form.get("selected_preset")  # parse preset
-        updated_project = request.form.get("updated_project")
+        project = request.form.get('selected_project')  # parse project
+        preset = request.form.get('selected_preset')  # parse preset
+        updated_project = request.form.get('updated_project')
         messages = []
 
-        '''Prepare the data for rendering:'''
+        """ Prepare the data for rendering: """
         if preset and project == updated_project:
-            preset_snippet = presets["presets"][preset]
-            json_snippet = config["values"][project]
+            preset_snippet = presets['presets'][preset]
+            json_snippet = config['values'][project]
             json_snippet.update(preset_snippet)
-            config["values"][project].update(json_snippet)
-            messages.append(dict(title="Warning", body="Preset " + preset + " was applied to project " + project))
-        json_snippet = config["values"][project]
+            config['values'][project].update(json_snippet)
+            messages.append(dict(title="Warning",
+                                 body="Preset " + preset + " was applied to project " + project))
+        json_snippet = config['values'][project]
         enabled_workflows = obtain_enabled(json_snippet)
         json_text = json.dumps(json_snippet, sort_keys=True, indent=2)
-
+        nested_list = append_refs(project)
         return render_template('base.html', project_list=project_list,
                                preset_list=preset_list,
                                selected_project=project,
                                selected_preset=preset,
+                               nested_list=nested_list,
                                json_snippet=json_text,
                                messages=messages,
                                checkbox_list=enabled_workflows[0],
@@ -253,7 +327,7 @@ def select():
                                opts_list=enabled_workflows[2])
 
 
-'''Clone a project'''
+""" Clone a project """
 
 
 @app.route("/clone", methods=["POST"])
@@ -265,23 +339,24 @@ def clone():
     project = request.form.get("project")
     cln = request.form.get("clone")
     if cln:
-        config["values"][cln] = copy.deepcopy(config["values"][project])
-        '''Order projects alphabetically'''
-        od = {k: v for k, v in sorted(config["values"].items())}
-        config["values"] = copy.deepcopy(od)
+        config['values'][cln] = copy.deepcopy(config['values'][project])
+        """ Order projects alphabetically """
+        od = {k: v for k, v in sorted(config['values'].items())}
+        config['values'] = copy.deepcopy(od)
         refresh()
         messages = [dict(title="Warning", body="Project " + project + " cloned into " + cln)]
     else:
         messages = [dict(title="Warning", body="You need to specify a name of the project to clone to")]
     print(messages[0]['body'])
-    json_snippet = config["values"][cln] if cln else config["values"][project_list[0]['id']]
+    json_snippet = config['values'][cln] if cln else config['values'][project_list[0]['id']]
     enabled_workflows = obtain_enabled(json_snippet)
     json_text = json.dumps(json_snippet, sort_keys=True, indent=2)
-
+    nested_list = append_refs(project)
     return render_template('base.html',
                            project_list=project_list,
                            preset_list=preset_list,
                            selected_project=cln,
+                           nested_list=nested_list,
                            json_snippet=json_text,
                            messages=messages,
                            checkbox_list=enabled_workflows[0],
@@ -289,7 +364,7 @@ def clone():
                            opts_list=enabled_workflows[2])
 
 
-'''Update a project'''
+""" Update a project """
 
 
 @app.route("/update/<string:project>", methods=["POST"])
@@ -300,31 +375,38 @@ def update(project):
     global config_path
 
     messages = []
-    '''Handle clicks on various update buttons'''
+    """ Handle clicks on various update buttons """
     if request.form['update_button'] == "clone":
-        messages = [dict(title="", body="Project " + project + "Is being cloned")]
+        messages = [dict(title="",
+                         body="Project " + project + "Is being cloned")]
         return render_template('clone.html', selected_project=project, messages=messages)
     elif request.form['update_button'] == "reset":
         del project_list[:]
         del config
         print("Configuration was restored...")
-        messages = [dict(title="Warning", body="Configuration was restored from disk")]
+        messages = [dict(title="Warning",
+                         body="Configuration was restored from disk")]
         init()
     elif request.form['update_button'] == "write":
         print("Saving changes...")
         with open(config_path, "w") as f:
             json.dump(config, f, sort_keys=True, indent=2)
-        messages = [dict(title="Warning", body="Changes were written to disk, review and prepare a Pull Request")]
+        messages = [dict(title="Warning",
+                         body="Changes were written to disk, review and prepare a Pull Request")]
     elif request.form['update_button'] == "delete":
-        del config["values"][project]
+        del config['values'][project]
         refresh()
-        messages = [dict(title="Warning", body="Project " + project + " was Deleted...")]
+        messages = [dict(title="Warning",
+                         body="Project " + project + " was Deleted...")]
         print(messages[0]['body'])
         project = project_list[0]['id']
     elif request.form.get('update_button') and request.form['update_button'] == "record":
         form_data = request.form
         form_dict = form_data.to_dict(flat=True)
-        updated_config = update_project(defaults, parseUpdate(form_dict))
+        parsed_update = parseUpdate(form_dict)
+        print("Parsed Update:")
+        print(parsed_update)
+        updated_config = update_project(defaults, parsed_update)
 
         """
         Debug messages, uncomment if needed
@@ -335,21 +417,25 @@ def update(project):
         print("Updated JSON:")
         myJSON = json.dumps(updated_config, indent=4)
         print(myJSON) 
+        
         Main Updating step below:
        
         """
 
-        config["values"][project].update(updated_config)
-        messages.append(dict(title="Warning", body="Changes NOT dumped to disk but retained in memory"))
+        config['values'][project].update(updated_config)
+        messages.append(dict(title="Warning",
+                             body="Changes NOT dumped to disk but retained in memory"))
     else:
         print("I received some unknown request")
-    json_snippet = config["values"][project]
+    json_snippet = config['values'][project]
     enabled_workflows = obtain_enabled(json_snippet)
     json_text = json.dumps(json_snippet, sort_keys=True, indent=2)
+    nested_list = append_refs(project)
     return render_template('base.html',
                            project_list=project_list,
                            preset_list=preset_list,
                            selected_project=project,
+                           nested_list=nested_list,
                            json_snippet=json_text,
                            messages=messages,
                            checkbox_list=enabled_workflows[0],
@@ -357,7 +443,7 @@ def update(project):
                            opts_list=enabled_workflows[2])
 
 
-''' The App starts here, check if have project_list and if NOT, initialize the app'''
+""" The App starts here, check if have project_list and if NOT, initialize the app"""
 if not project_list or len(project_list) == 0:
     init()
 

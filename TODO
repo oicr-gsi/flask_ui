@@ -1,5 +1,6 @@
-﻿* The most pressing item is to make a script that would automatically generate the nested_list.html file
-  This script would read a projectconfig file and create an updated .html template for rendering Configuration UI
+﻿* Regression testing - this can be done fairly quickly, need to test various functions of the
+  app with pre-generated inputs. May also simulate adding/removing options to config file
+  (projectconfig_info)
 
 * GIT operations - at the moment, the prototype is not capable to interact with a remote repository,
   implementing basic functionality in UI (create a branch, commit push and submit a pull request) 
@@ -8,3 +9,4 @@
 * Making the app more robust - as of now, there is no code to ensure a secure, error-resilient
   workflow. There is no syntax check and verification of any pending changes is the human 
   operator's task
+

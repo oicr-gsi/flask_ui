@@ -1,1 +1,4 @@
-Flask==2.0.2
+###### Requirements without Version Specifiers ######
+beautifulsoup4
+###### Requirements with Version Specifiers ######
+Flask >= 2.0.2
