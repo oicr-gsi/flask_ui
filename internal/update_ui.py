@@ -15,7 +15,7 @@ import copy
 """
   Some project-specific fields are not going into presets
 """
-fields_to_skip = ['lab_priority', supported_types.REF_KEY]
+fields_to_skip = ['swgs_sequencer', 'lab_priority', supported_types.REF_KEY]
 """
   Load config, process the the facet with types
 """

@@ -169,8 +169,7 @@ def parse_override(value):
 
 """
  text inputs get submitted even if there are no values entered. 
- This function filters entries which only have empty strings.
- Everything else is Ok
+ This function filters objects which only have txt inputs with empty strings.
 """
 
 
