@@ -69,7 +69,7 @@ class updateUi:
     """ This is for recursive update of presets """
 
     def vet_recursively(self, presets: dict, parameter_defaults: dict) -> dict:
-        """ We want add missing but avoid overriding existing values """
+        """ We want to add missing but avoid overriding existing values """
         for d in parameter_defaults.keys():
             if d not in presets.keys() and d not in fields_to_skip:
                 print("Adding " + d)
