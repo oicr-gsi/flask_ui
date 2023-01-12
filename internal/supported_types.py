@@ -12,7 +12,25 @@ REF_KEY = 'reference_for_species'
 
 
 def get_supported():
-    return ['qi', 'b', 'i', 's', 'algebraic', 'msas', 'object']
+    return ['qi', 'b', 'i', 's', 'as', 'algebraic', 'msas', 'object']
+
+
+"""
+   Flatten nested array and return string in array if needed
+   This function handles 'as' type at present but should go into AS class
+   eventually. Also, other classes may use validate_value() function
+   which would ensure correct formatting of the dict structure
+   that goes into project_config_info.jsonfile
+"""
+
+
+def flatten(entry):
+    if entry is None:
+        return None
+    if isinstance(entry, list):
+        return [item for sublist in entry for item in sublist]
+    elif isinstance(entry, str):
+        return [entry]
 
 
 """This function will return a default value for an interface element depending on type"""
@@ -27,6 +45,8 @@ def get_default_value(entry_type: str, entry_value=None):
         return QI.get_default()
     if entry_type == 's':
         return S.get_default()
+    if entry_type == 'as':
+        return AS.get_default()
     if entry_type == 'algebraic':
         return ALGEBRAIC.get_default(entry_value)
     if entry_type == 'msas':
@@ -50,6 +70,9 @@ def get_rendered(element, element_id: str, entry_type: str, index=0, drop_items=
         return my_element.render_element()
     if entry_type == 's':
         my_element = S(element_id, parent)
+        return my_element.render_element()
+    if entry_type == 'as':
+        my_element = AS(element_id, parent)
         return my_element.render_element()
     if entry_type == 'algebraic':
         my_element = ALGEBRAIC(element, element_id, parent)
@@ -125,6 +148,28 @@ class S:
     @staticmethod
     def get_default():
         return "Enter value"
+
+
+class AS:
+    def __init__(self, my_id: str, parent: str):
+        self.my_id = my_id
+        self.parent = parent
+        if self.parent is not None:
+            self.parented_id = SEP.join([self.parent, self.my_id])
+        else:
+            self.parented_id = self.my_id
+
+    def render_element(self):
+        return f'<li class="inline field"> \
+             <div class="ui right pointing label"> \
+             {self.my_id} \
+             </div> \
+             <input type="text" id="{self.parented_id}" name="{self.parented_id}" size="8"> \
+             </li>'
+
+    @staticmethod
+    def get_default():
+        return None
 
 
 class ALGEBRAIC:

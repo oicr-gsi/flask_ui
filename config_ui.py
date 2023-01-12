@@ -115,7 +115,10 @@ def obtain_enabled(project_json: object, parent="") -> object:
             if type(project_json[entry]) in [str, int, float]:
                 texts.append(dict(id=entry_id, value=project_json[entry]))
             if isinstance(project_json[entry], list):
-                texts.append(dict(id=entry_id, value=",".join(project_json[entry][0])))
+                if isinstance(project_json[entry][0], list):
+                    texts.append(dict(id=entry_id, value=",".join(project_json[entry][0])))
+                else:
+                    texts.append(dict(id=entry_id, value=",".join(project_json[entry])))
 
     return boxes, texts, opts
 
@@ -123,7 +126,7 @@ def obtain_enabled(project_json: object, parent="") -> object:
 """ De-serialize parent/child ids, make another level of dict for entries with parent """
 
 
-def parseUpdate(update_object):
+def parse_update(update_object):
     parsed_dict = {}
     for key, value in update_object.items():
         """ hard-coded, but can be kept as is - we define these names in base.html"""
@@ -191,6 +194,8 @@ def not_only_empty(entry, to_check: dict) -> bool:
 
 
 def update_project(to_update, overrides, master_overrides=None):
+    global config_updater
+    entry_types = config_updater.get_types()
     """
     Update a nested dictionary or similar mapping.
     reference_for_species gets a special treatment.
@@ -230,6 +235,8 @@ def update_project(to_update, overrides, master_overrides=None):
                     to_return[key] = update_project(to_update[key], overrides, master_overrides)
             elif isinstance(overrides, dict) and key in overrides.keys():
                 to_return[key] = update_project(to_update[key], overrides[key], master_overrides)
+                if key in entry_types.keys() and entry_types[key] == 'as':
+                    to_return[key] = supported_types.flatten(to_return[key])
     else:
         """ Update a single value """
         to_return = parse_override(overrides)
@@ -401,11 +408,12 @@ def update(project):
     elif request.form.get('update_button') and request.form['update_button'] == "record":
         form_data = request.form
         form_dict = form_data.to_dict(flat=True)
-        parsed_update = parseUpdate(form_dict)
+        parsed_update = parse_update(form_dict)
         updated_config = update_project(defaults, parsed_update)
 
         """
         Debug messages, uncomment if needed
+        
         form_json = json.dumps(form_dict)
         print("That is what we have submitted:")
         print(form_json) 

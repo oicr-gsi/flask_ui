@@ -7,7 +7,6 @@
 # type 'flask run' in project's dir to serve the app on localhost
 
 export FLASK_APP=config_ui.py
-export FLASK_ENV=development
 export UICONFIG_SETTINGS="$HOME/secrets/ui_config.cfg"
 source venv/bin/activate
 
