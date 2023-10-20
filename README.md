@@ -94,6 +94,17 @@ Steps for a session may include some or all of the following:
 * Go to your local directory with shesmu config files, create a branch, review 
   and commit your changes. Push to the repo and create a Pull Request
 
+## Automatic Updates to Presets
+
+The UI app relies on **project_presets.conf** file which defines a number of settings for
+standard pipelines configured by GSI. Occasionally, settings may be removed or added to
+the **project_info.jsonconfig**. flask UI app will detect such changes and auomatically 
+update the preset file. Pipeline Leads should review these changes and ensure that
+they were applied correctly (especially important when a complex setting as *##_pipeline*
+is added). The app takes it's best guess what to use to configure a new setting but it
+always needs to be verified. The proper procedure for this would be to use *git diff*
+followed by manual edits in something like vim or other editor of choice.
+
 ------------------------------------------------------------------------------
 
 Developed using Python 3.8, Pycharm IDE v.2020.1 and Flask 2.0.2 
