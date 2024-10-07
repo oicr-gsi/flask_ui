@@ -61,10 +61,13 @@ class updateUi:
 
     def obtain_assemblies(self):
         for project in self.config['values'].keys():
-            if supported_types.REF_KEY in self.config['values'][project].keys():
-                next_chunk = self.config['values'][project][supported_types.REF_KEY]
-                if isinstance(next_chunk, dict):
-                    self.assemblies.update(next_chunk)
+            for project_version in self.config['values'][project]['versions'].keys(): 
+                next_version = self.config['values'][project]['versions'][project_version]
+                if supported_types.REF_KEY in next_version.keys():
+                    next_chunk = next_version[supported_types.REF_KEY]
+                    if isinstance(next_chunk, dict):
+                        self.assemblies.update(next_chunk)
+
 
     """ This is for recursive update of presets """
 
@@ -97,6 +100,8 @@ class updateUi:
     def vetted_defaults(self, types: dict) -> dict:
         vetted = {}
         for key, entry in types.items():
+            if isinstance(key, str) and key == 'versions':
+                return self.vetted_defaults(entry['value']['fields'])
             if isinstance(entry, dict):
                 if 'inner' in entry.keys() and 'fields' in entry['inner'].keys():
                     self.entry_types[key] = entry['inner']['is']
@@ -104,9 +109,10 @@ class updateUi:
                 elif 'is' in entry.keys() and entry['is'] == 'algebraic':
                     self.entry_types[key] = entry['is']
                     vetted[key] = supported_types.get_default_value('algebraic', entry['union'])
-            elif entry == 'msas':
+            elif isinstance(entry, str) and entry == 'msas':
                 self.entry_types[key] = entry
-                vetted[key] = self.config['defaults'][key]
+                default_version_key = next(iter(self.config['defaults']['versions']))
+                vetted[key] = self.config['defaults']['versions'][default_version_key][key]
             else:
                 self.entry_types[key] = entry
                 vetted[key] = supported_types.get_default_value(types[key], entry)
@@ -121,6 +127,9 @@ class updateUi:
     def add_recursively(self, content: dict, parent=None):
         html_strings = ""
         for key, value in content.items():
+            if isinstance(key, str) and key == 'versions':
+                html_strings += self.add_recursively(content['versions']['value']['fields'])
+                continue
             if isinstance(value, dict):
                 if self.entry_types[key] == 'object':
                     html_strings += supported_types.get_rendered(value, key, 'object', 0, None, parent)

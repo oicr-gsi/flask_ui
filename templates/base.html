@@ -36,7 +36,7 @@
 
 <body>
 <div style="margin-top: 50px;" class="ui container">
-  <h1 class="ui center aligned header">Project Config UI</h1>
+  <h1 class="ui center aligned header">Assay Config UI</h1>
   {% for message in messages %}
   <div class="ui warning message">
   <i class="close icon"></i>
@@ -48,21 +48,44 @@
   {% endfor %}
   <form class="ui form" action="/select" method="post">
      <div class="field">
-        <label>Select Project</label>
+        <label>Select Assay</label>
         <select name="selectedProject" id="projects" value="{{selected_project}}"
                 onchange='document.getElementById("input").value=document.getElementById("projects").value;
+                          document.getElementById("version_input").value=document.getElementById("versions").value;
                           document.getElementById("preset_input").value="";this.form.submit()'>
           {% for project in project_list %}
           {% if project.id == selected_project %}
-          <option value={{project.id}} selected="selected">{{project.title}}</option>
+          <option value="{{project.id}}" selected="selected">{{project.title}}</option>
           {% else %}
-          <option value={{project.id}}>{{project.title}}</option>
+          <option value="{{project.id}}">{{project.title}}</option>
           {% endif %}
           {% endfor %}
         </select>
         <!--This hidden input holds the name of the project being updated, will keep the value on selecting
             another project and can be used to update the values when user navigates away-->
-        <input type="hidden" id="updated_project" name="updated_project" value={{selected_project}}>
+        <input type="hidden" id="updated_project" name="updated_project" value="{{selected_project}}">
+     </div>
+     <div class="field">
+        <label>Select Version</label>
+        <select name="selectedVersion" id="versions" value="{{selected_version}}"
+                onchange='document.getElementById("input").value=document.getElementById("projects").value;
+                          document.getElementById("version_input").value=document.getElementById("versions").value;
+                          document.getElementById("preset_input").value="";this.form.submit()'>
+          {% for project in project_list %}
+          {% if project.id == selected_project %}
+          {% for version in project.versions %}
+          {% if version == selected_version %}
+          <option value={{selected_version}} selected="selected">{{selected_version}}</option>
+          {% else %}
+          <option value={{version}}>{{version}}</option>
+          {% endif %}
+          {% endfor %}
+          {% endif %}
+          {% endfor %}
+        </select>
+        <!--This hidden input holds the name of the version being updated, will keep the value on selecting
+            another varsion and can be used to update the values when user navigates away-->
+        <input type="hidden" id="updated_version" name="updated_version" value={{selected_version}}>
      </div>
      <div class="field">
         <label>Presets:</label>
@@ -78,11 +101,17 @@
           {% endfor %}
         </select>
      </div>
-     <!--Two hidden inputs below are for passing values for preset and selected project on form submit-->
+     <!--Three hidden inputs below are for passing values for preset, version and selected assay on form submit-->
      <div class="field" style="height=0;display:none">
         <input type="text" id="input" value="{{selected_project}}" name="selected_project"
                hidden="hidden"
                placeholder="Project Goes Here..."
+               readonly="readonly"><br>
+     </div>
+     <div class="field" style="height=0;display:none">
+        <input type="text" id="version_input" value="{{selected_version}}" name="selected_version"
+               hidden="hidden"
+               placeholder="Version Goes Here..."
                readonly="readonly"><br>
      </div>
      <div class="field" style="height=0;display:none">
@@ -93,7 +122,7 @@
      </div>
   </form>
   <!-- We have a second form which is for fine-detail customization of a project-->
-  <form class="ui form" action="/update/{{selected_project}}" method="post">
+  <form class="ui form" action="/update/{{selected_project}}/{{selected_version}}" method="post">
      <div class="ui segment">
         <div class="ui two column very relaxed grid">
            <div class="column">

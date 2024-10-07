@@ -68,8 +68,11 @@ def refresh():
     global project_list
     global config
     project_list = []
-    for p in config['values']:
-        project_list.append(dict(id=p, title=p))
+    for p in config['values'].keys():
+        versions = []
+        for v in config['values'][p]['versions'].keys():
+            versions.append(v)
+        project_list.append(dict(id=p, title=p, versions=versions))
 
 
 """Check what we have enabled for a given project and return as a dict"""
@@ -192,7 +195,6 @@ def not_only_empty(entry, to_check: dict) -> bool:
 
 """Subroutine to update a dict for inserting into main config"""
 
-
 def update_project(to_update, overrides, master_overrides=None):
     global config_updater
     entry_types = config_updater.get_types()
@@ -245,14 +247,13 @@ def update_project(to_update, overrides, master_overrides=None):
 
 """ Special function for inserting references into dynamically generated HTML UI """
 
-
-def append_refs(project: str):
+def append_refs(project: str, version: str):
     global config
     global config_updater
 
     ui = config_updater.get_ui()
 
-    my_refinfo = config['values'][project][supported_types.REF_KEY]
+    my_refinfo = config['values'][project]['versions'][version][supported_types.REF_KEY]
     """ We just need to know how many at this point, javascript will fill these in """
     if isinstance(my_refinfo, dict):
         my_addon = ""
@@ -277,14 +278,16 @@ def index():
     global preset_list
     global config
     project = project_list[0]['id']
+    version = project_list[0]['versions'][0]
     """We need to pass only the enabled pipelines, js script will put the checkmarks accordingly"""
-    json_snippet = config['values'][project]
+    json_snippet = config['values'][project]['versions'][version]
     enabled_workflows = obtain_enabled(json_snippet)
     json_text = json.dumps(json_snippet, sort_keys=True, indent=2)
-    nested_list = append_refs(project)
+    nested_list = append_refs(project, version)
     return render_template('base.html', project_list=project_list,
                            preset_list=preset_list,
                            selected_project=project,
+                           selected_version=version,
                            nested_list=nested_list,
                            json_snippet=json_text,
                            checkbox_list=enabled_workflows[0],
@@ -293,7 +296,6 @@ def index():
 
 
 """ Upon selection of a project or preset update the values in the form """
-
 
 @app.route('/select', methods=['POST'])
 def select():
@@ -304,25 +306,30 @@ def select():
 
     if request.method == 'POST':
         project = request.form.get('selected_project')  # parse project
+        version = request.form.get('selected_version')  # parse version
         preset = request.form.get('selected_preset')  # parse preset
         updated_project = request.form.get('updated_project')
+        updated_version = request.form.get('updated_version')
         messages = []
 
         """ Prepare the data for rendering: """
         if preset and project == updated_project:
             preset_snippet = presets['presets'][preset]
-            json_snippet = config['values'][project]
+            json_snippet = config['values'][project]['versions'][updated_version]
             json_snippet.update(preset_snippet)
-            config['values'][project].update(json_snippet)
+            config['values'][project]['versions'][updated_version].update(json_snippet)
             messages.append(dict(title="Warning",
-                                 body="Preset " + preset + " was applied to project " + project))
-        json_snippet = config['values'][project]
+                                 body="Preset " + preset + " applied to project " + project + " v." + updated_version))
+        if version not in config['values'][project]['versions'].keys():
+            version = next(iter(config['values'][project]['versions']))
+        json_snippet = config['values'][project]['versions'][version]
         enabled_workflows = obtain_enabled(json_snippet)
         json_text = json.dumps(json_snippet, sort_keys=True, indent=2)
-        nested_list = append_refs(project)
+        nested_list = append_refs(project, version)
         return render_template('base.html', project_list=project_list,
                                preset_list=preset_list,
                                selected_project=project,
+                               selected_version=version,
                                selected_preset=preset,
                                nested_list=nested_list,
                                json_snippet=json_text,
@@ -340,11 +347,15 @@ def clone():
     global project_list
     global preset_list
     global config
-
-    project = request.form.get("project")
-    cln = request.form.get("clone")
+    #TODO: Check that we are not cloning into existing entry
+    project = request.form.get("source_assay")
+    version = request.form.get("source_version")
+    cln = request.form.get("clone_assay")
+    vrs = request.form.get("clone_version")
     if cln:
-        config['values'][cln] = copy.deepcopy(config['values'][project])
+        config['values'][cln] = {}
+        config['values'][cln]['versions'] = {}
+        config['values'][cln]['versions'][vrs] = copy.deepcopy(config['values'][project]['versions'][version])
         """ Order projects alphabetically """
         od = {k: v for k, v in sorted(config['values'].items())}
         config['values'] = copy.deepcopy(od)
@@ -353,14 +364,15 @@ def clone():
     else:
         messages = [dict(title="Warning", body="You need to specify a name of the project to clone to")]
     print(messages[0]['body'])
-    json_snippet = config['values'][cln] if cln else config['values'][project_list[0]['id']]
+    json_snippet = config['values'][cln]['versions'][vrs] if cln else config['values'][project]['versions'][version]
     enabled_workflows = obtain_enabled(json_snippet)
     json_text = json.dumps(json_snippet, sort_keys=True, indent=2)
-    nested_list = append_refs(project)
+    nested_list = append_refs(project, version)
     return render_template('base.html',
                            project_list=project_list,
                            preset_list=preset_list,
                            selected_project=cln,
+                           selected_version=vrs,
                            nested_list=nested_list,
                            json_snippet=json_text,
                            messages=messages,
@@ -372,19 +384,20 @@ def clone():
 """ Update a project """
 
 
-@app.route("/update/<string:project>", methods=["POST"])
-def update(project):
+@app.route("/update/<string:project>/<string:version>", methods=["POST"])
+def update(project, version):
     global project_list
     global preset_list
     global config
     global config_path
 
     messages = []
+    firstAvailableVersion = next(iter(config['values'][project_list[0]['id']]['versions']))
     """ Handle clicks on various update buttons """
     if request.form['update_button'] == "clone":
         messages = [dict(title="",
-                         body="Project " + project + "Is being cloned")]
-        return render_template('clone.html', selected_project=project, messages=messages)
+                         body="Project version " + version + " of Project " + project + "Is being cloned")]
+        return render_template('clone.html', selected_project=project, selected_version=version, messages=messages)
     elif request.form['update_button'] == "reset":
         del project_list[:]
         del config
@@ -392,6 +405,8 @@ def update(project):
         messages = [dict(title="Warning",
                          body="Configuration was restored from disk")]
         init()
+        project = project_list[0]['id']
+        version = firstAvailableVersion
     elif request.form['update_button'] == "write":
         print("Saving changes...")
         with open(config_path, "w") as f:
@@ -399,12 +414,16 @@ def update(project):
         messages = [dict(title="Warning",
                          body="Changes were written to disk, review and prepare a Pull Request")]
     elif request.form['update_button'] == "delete":
-        del config['values'][project]
+        if len(config['values'][project]['versions']) > 1:
+            del config['values'][project]['versions'][-1]
+        else:
+            del config['values'][project]
         refresh()
         messages = [dict(title="Warning",
-                         body="Project " + project + " was Deleted...")]
+                         body="Last version of Assay " + project + " was Deleted...")]
         print(messages[0]['body'])
         project = project_list[0]['id']
+        version = firstAvailableVersion
     elif request.form.get('update_button') and request.form['update_button'] == "record":
         form_data = request.form
         form_dict = form_data.to_dict(flat=True)
@@ -426,19 +445,20 @@ def update(project):
        
         """
 
-        config['values'][project].update(updated_config)
+        config['values'][project]['versions'][version].update(updated_config)
         messages.append(dict(title="Warning",
                              body="Changes NOT dumped to disk but retained in memory"))
     else:
         print("I received some unknown request")
-    json_snippet = config['values'][project]
+    json_snippet = config['values'][project]['versions'][version]
     enabled_workflows = obtain_enabled(json_snippet)
     json_text = json.dumps(json_snippet, sort_keys=True, indent=2)
-    nested_list = append_refs(project)
+    nested_list = append_refs(project, version)
     return render_template('base.html',
                            project_list=project_list,
                            preset_list=preset_list,
                            selected_project=project,
+                           selected_version=version,
                            nested_list=nested_list,
                            json_snippet=json_text,
                            messages=messages,
