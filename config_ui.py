@@ -353,8 +353,9 @@ def clone():
     cln = request.form.get("clone_assay")
     vrs = request.form.get("clone_version")
     if cln:
-        config['values'][cln] = {}
-        config['values'][cln]['versions'] = {}
+        if cln not in config['values'].keys():
+            config['values'][cln] = {}
+            config['values'][cln]['versions'] = {}
         config['values'][cln]['versions'][vrs] = copy.deepcopy(config['values'][project]['versions'][version])
         """ Order projects alphabetically """
         od = {k: v for k, v in sorted(config['values'].items())}
