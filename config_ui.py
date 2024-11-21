@@ -384,8 +384,7 @@ def clone():
 
 """ Update a project """
 
-
-@app.route("/update/<string:project>/<string:version>", methods=["POST"])
+@app.route("/update/<path:project>/<string:version>", methods=["POST"])
 def update(project, version):
     global project_list
     global preset_list
