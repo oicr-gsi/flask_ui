@@ -211,8 +211,8 @@ def update_project(to_update, overrides, master_overrides=None):
                 updated_refs = {}
                 for over_key in overrides.keys():
                     if over_key.startswith(supported_types.REF_KEY):
-                        if re.search('\d+$', over_key):
-                            ref_idx = re.search('\d+$', over_key).group(0)
+                        if re.search(r'\d+$', over_key):
+                            ref_idx = re.search(r'\d+$', over_key).group(0)
                             if overrides[f'reference_assembly{ref_idx}']:
                                 updated_refs[overrides[over_key].upper()] = [overrides[f'reference_assembly{ref_idx}']]
                 if len(updated_refs) > 0:
