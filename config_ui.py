@@ -4,6 +4,7 @@ import json
 import os
 import re
 import sys
+
 from bs4 import BeautifulSoup as Bs
 from flask import Flask, render_template, request
 from internal import supported_types
@@ -195,6 +196,7 @@ def not_only_empty(entry, to_check: dict) -> bool:
 
 """Subroutine to update a dict for inserting into main config"""
 
+
 def update_project(to_update, overrides, master_overrides=None):
     global config_updater
     entry_types = config_updater.get_types()
@@ -247,6 +249,7 @@ def update_project(to_update, overrides, master_overrides=None):
 
 """ Special function for inserting references into dynamically generated HTML UI """
 
+
 def append_refs(project: str, version: str):
     global config
     global config_updater
@@ -296,6 +299,7 @@ def index():
 
 
 """ Upon selection of a project or preset update the values in the form """
+
 
 @app.route('/select', methods=['POST'])
 def select():
@@ -347,7 +351,7 @@ def clone():
     global project_list
     global preset_list
     global config
-    #TODO: Check that we are not cloning into existing entry
+    # TODO: Check that we are not cloning into existing entry
     project = request.form.get("source_assay")
     version = request.form.get("source_version")
     cln = request.form.get("clone_assay")
@@ -384,6 +388,7 @@ def clone():
 
 """ Update a project """
 
+
 @app.route("/update/<path:project>/<string:version>", methods=["POST"])
 def update(project, version):
     global project_list
@@ -409,8 +414,8 @@ def update(project, version):
         version = firstAvailableVersion
     elif request.form['update_button'] == "write":
         print("Saving changes...")
-        with open(config_path, "w") as f:
-            json.dump(config, f, sort_keys=True, indent=2)
+        with open(config_path, 'w') as f:
+            json.dump(config, f, sort_keys=True, indent=2, ensure_ascii=False)
         messages = [dict(title="Warning",
                          body="Changes were written to disk, review and prepare a Pull Request")]
     elif request.form['update_button'] == "delete":
