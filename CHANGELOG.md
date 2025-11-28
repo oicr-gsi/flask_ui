@@ -1,3 +1,9 @@
+## 1.1.0 - 2025-11-28
+ - Complete re-write to accomodate new assay_info.jsonconfig format
+ - Scan olives to extract versions of deployed workflows
+ - writing into staged config file (configurbale)
+ - switch to .toml settings file
+ - greatly simplified flattened list of options
 ## 1.0.0 - 2022-10-10
  - UI is now generated dynamically, presets are harmonized with projectconfig_info on each launch and
    multiple species are supported. Next update should include regression testing. Added BeautifulSoup dependency

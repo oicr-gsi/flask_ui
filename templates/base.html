@@ -55,7 +55,7 @@
                           document.getElementById("preset_input").value="";this.form.submit()'>
           {% for project in project_list %}
           {% if project.id == selected_project %}
-          <option value="{{project.id}}" selected="selected">{{project.title}}</option>
+          <option value="{{project.id}}" selected="selected">{{project.id}}</option>
           {% else %}
           <option value="{{project.id}}">{{project.title}}</option>
           {% endif %}
@@ -93,10 +93,10 @@
                 onchange='document.getElementById("preset_input").value=document.getElementById("preset").value;this.form.submit()'>
           <option value="" selected disabled hidden>Choose a Preset</option>
           {% for preset in preset_list %}
-          {% if preset.id == selected_preset %}
-          <option value={{preset.id}} selected="selected">{{preset.title}}</option>
+          {% if preset == selected_preset %}
+          <option value={{preset}} selected="selected">{{preset}}</option>
           {% else %}
-          <option value={{preset.id}}>{{preset.title}}</option>
+          <option value={{preset}}>{{preset}}</option>
           {% endif %}
           {% endfor %}
         </select>
@@ -105,7 +105,7 @@
      <div class="field" style="height=0;display:none">
         <input type="text" id="input" value="{{selected_project}}" name="selected_project"
                hidden="hidden"
-               placeholder="Project Goes Here..."
+               placeholder="Assay Goes Here..."
                readonly="readonly"><br>
      </div>
      <div class="field" style="height=0;display:none">

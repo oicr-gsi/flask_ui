@@ -2,10 +2,6 @@
   app with pre-generated inputs. May also simulate adding/removing options to config file
   (projectconfig_info)
 
-* GIT operations - at the moment, the prototype is not capable to interact with a remote repository,
-  implementing basic functionality in UI (create a branch, commit push and submit a pull request) 
-  will be desirable
-
 * Making the app more robust - as of now, there is no code to ensure a secure, error-resilient
   workflow. There is no syntax check and verification of any pending changes is the human 
   operator's task
