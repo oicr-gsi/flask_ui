@@ -214,15 +214,15 @@ def clone():
     vrs = request.form.get("clone_version")
 
     if cln:
-        if cln not in state.config['values'].keys():
+        if cln not in state.config['values'].keys() or vrs not in  state.config['values'][cln]['versions'].keys():
             ensure(state.config['values'], cln, "versions")[vrs] = {}
-            state.config['values'][cln][supported_types.REF_KEY] = \
-                state.config['values'][assay].get(supported_types.REF_KEY, "Not Set")
+        state.config['values'][cln][supported_types.REF_KEY] = \
+            state.config['values'][assay].get(supported_types.REF_KEY, "Not Set")
         state.config['values'][cln]['versions'][vrs].update(state.config['values'][assay]['versions'][version])
         """ Order assays alphabetically """
         od = {k: v for k, v in sorted(state.config['values'].items())}
         state.config['values'] = copy.deepcopy(od)
-        messages = [dict(title="Warning", body="Assay " + assay + " cloned into " + cln)]
+        messages = [dict(title="Warning", body="Assay " + assay + " cloned into " + cln + " v." + vrs)]
     else:
         messages = [dict(title="Warning", body="You need to specify a name of the assay to clone to")]
     print(messages[0]['body'])

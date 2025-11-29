@@ -6,6 +6,6 @@
 
 # type 'flask run' in project's dir to serve the app on localhost
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
-export UICONFIG_SETTINGS="$HOME/secrets/ui_config.cfg"
+export UICONFIG_SETTINGS="$HOME/secrets/ui_config.toml"
 source venv/bin/activate
 
