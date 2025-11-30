@@ -176,6 +176,7 @@ def select():
             preset_snippet = state.get_presets()['presets'][preset]
             json_snippet = {k: v for k, v in json_snippet.items() if k in preset_snippet.keys()}
             json_snippet.update({k: v for k, v in preset_snippet.items() if k not in json_snippet})
+            '''Next check against instance-specific olives ensures we use only relevant workflows from a preset'''
             updated_snippet = state.get_updated_assays({assay: {'versions': {version: {'workflows': json_snippet}}}},
                                                        current_app.config.get("SCAN_CACHE", {}),
                                                        current_app.config.get("prefixes", {}), assay)
