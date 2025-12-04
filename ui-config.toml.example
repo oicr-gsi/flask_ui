@@ -1,0 +1,10 @@
+[data]
+local_olive_dir="$HOME/code/shesmu/"
+assay_config_file="$HOME/code/assay_info.jsonconfig"
+assay_stage_file="$HOME/code/assay_stage.jsonconfig"
+preset_path="$HOME/code/assay_presets.conf"
+instances=["research","production-cap"]
+blacklist=['vidarr-u20-providencePipeline.shesmu','vidarr-u20-pbcmProjectMedipsPipe.shesmu',"vidarr-u20-fileinjection.shesmu"]
+
+[prefixes]
+research="RUO"
