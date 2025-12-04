@@ -19,7 +19,7 @@ from services.config_ops import get_config
 from services.session_state import state, SessionState
 
 
-def create_app(debug=True):
+def create_app():
     app = Flask(__name__)
     '''We can store configuration elements in the app.config'''
     app.config.update(get_config(os.environ['UICONFIG_SETTINGS']))
@@ -42,7 +42,7 @@ def load_config() -> dict:
     return assay_config
 
 
-""" For state: Load presets TODO: update them here if config changed"""
+""" For state: Load presets"""
 def load_presets() -> dict:
     preset_config = {}
     preset_path = get_config(os.environ['UICONFIG_SETTINGS'])["data"]["preset_path"]
@@ -87,15 +87,11 @@ def save_config(conf_data: dict, output_file: str):
         vetted_od = SessionState.deepsort_dict(conf_data)
         with open(output_file, "w") as wfj:
             jstring = json.dumps(vetted_od, indent=2, ensure_ascii=False)
-            jstring = re.sub(r'(\[)\n', r'\1', jstring)
-            jstring = re.sub(r'(\d\")\s+', r'\1', jstring)
-            jstring = re.sub(r'(\.\d\",)\s+', r'\1', jstring)
-            jstring = re.sub(r'(\[)\s+', r'\1', jstring)
-            jstring = re.sub(r'(\d\",)\n', r'\1', jstring)
+            jstring = pretty_json(jstring)
             '''Take care of strings with reference'''
             pattern_string = supported_types.REF_KEY + r"\S+\s+\S+\d\","
             ptr = re.compile(f'({pattern_string})')
-            jstring = re.sub(ptr, r'\1' + "\n", jstring)
+            jstring = re.sub(ptr, r'\1' + "\n      ", jstring)
             wfj.write(jstring)
             print(f"INFO: Saved staged assay configuration into a file {output_file}")
     except:

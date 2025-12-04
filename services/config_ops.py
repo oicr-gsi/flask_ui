@@ -8,9 +8,9 @@ import tomllib
 
 _cached_config = None
 
-def get_config(CONFIG_PATH: str):
+def get_config(config_path: str):
     global _cached_config
     if _cached_config is None:
-        with open(CONFIG_PATH, "rb") as f:
+        with open(config_path, "rb") as f:
             _cached_config = tomllib.load(f)
     return _cached_config
