@@ -103,4 +103,4 @@ use *git diff* followed by manual edits in something like vim or other editor of
 
 ------------------------------------------------------------------------------
 
-Developed using Python 3.12, Pycharm IDE v.2023.1 and Flask 3.1.0 
+Developed using Python 3.12, Pycharm IDE v.2025.1 and Flask 3.1.0 
