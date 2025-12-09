@@ -22,13 +22,13 @@ cp ui-config.toml.example "${CONFIG_FILE_DIRECTORY}"/ui-config.toml
 ```
 
 Modify the new file to point to the locations of the shesmu configuration files (currently in
-analysis_-production).
+analysis_config).
 
 ## Launching the App
 
 Normally, you would update your production branch of the repo with shesmu configuration files 
-(currently it is spb-seqware-production) and go into your flask-ui directory where
-config-ui.py script resides. Before running the app, some environment variables need to be set:
+(olives) and go into your flask-ui directory where
+app.py script resides. Before running the app, some environment variables need to be set:
 
 ```
  export FLASK_ENV=development
@@ -96,11 +96,11 @@ Steps for a session may include some or all of the following:
 
 The UI app relies on **assay_presets.conf** file which defines a number of settings for
 standard pipelines configured by GSI. Occasionally, settings may be removed or added to
-the **assay_info.jsonconfig**. flask UI app will not detect such changes! 
+the **assay_info.jsonconfig**. flask UI app will not detect and highlight such changes! 
 The app takes it's best guess what to use to configure a new 
 setting but it always needs to be verified. The proper procedure for this would be to 
 use *git diff* followed by manual edits in something like vim or other editor of choice.
 
 ------------------------------------------------------------------------------
 
-Developed using Python 3.8, Pycharm IDE v.2020.1 and Flask 2.0.2 
+Developed using Python 3.12, Pycharm IDE v.2023.1 and Flask 3.1.0 
