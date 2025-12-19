@@ -5,6 +5,8 @@ The interface requires flask installation so it can run in a web browser locally
 need to be specified, see INSTALL for that.
 
 ## Setting up for Development 
+
+It is required that virtual environment is created using Python 3.12 or newer
  
 [Creating Virtual Environment](https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-and-using-virtual-environments)
 
