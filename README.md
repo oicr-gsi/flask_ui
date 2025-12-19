@@ -22,7 +22,7 @@ cp ui-config.toml.example "${CONFIG_FILE_DIRECTORY}"/ui-config.toml
 ```
 
 Modify the new file to point to the locations of the shesmu configuration files (currently in
-analysis_config).
+analysis-config).
 
 ## Launching the App
 
