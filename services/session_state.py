@@ -30,7 +30,10 @@ class SessionState:
         return self.config
 
     def get_presets(self):
-        return self.preset_list
+        if self.preset_list is not None:
+            if isinstance(self.preset_list, dict) and 'presets' in self.preset_list.keys():
+                return self.preset_list
+        return {'presets': {}}
 
     """Utility function for flattening arrays and other nested data structures"""
     @staticmethod

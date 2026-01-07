@@ -45,9 +45,30 @@ def load_config() -> dict:
 """ For state: Load presets"""
 def load_presets() -> dict:
     preset_config = {}
-    preset_path = get_config(os.environ['UICONFIG_SETTINGS'])["data"]["preset_path"]
-    with open(os.path.join(os.path.dirname(sys.argv[0]), preset_path), 'r') as f:
-        preset_config = json.load(f)
+    preset_path = ""
+    '''Make sure we have a dict of lists (workflows) which are all empty'''
+    def list_and_empty(test):
+        if isinstance(test, dict):
+            try:
+                return all(isinstance(y, list) and len(y) == 0 for y in test.values())
+            except:
+                return False
+        return False
+
+    try:
+        preset_path = get_config(os.environ['UICONFIG_SETTINGS'])["data"]["preset_path"]
+        with open(os.path.join(os.path.dirname(sys.argv[0]), preset_path), 'r') as f:
+            preset_config = json.load(f)
+            '''Validate presets'''
+            if isinstance(preset_config, dict) and 'presets' in preset_config.keys():
+                presets_ok = all(list_and_empty(preset_config['presets'][x]) for x in preset_config['presets'].keys())
+                if presets_ok:
+                    return preset_config
+            preset_config = {}
+    except FileNotFoundError:
+        print(f"ERROR: Preset file specified as {preset_path} not found")
+    except KeyError:
+        print("ERROR: preset path is not specified in configuration file")
     return preset_config
 
 
