@@ -9,6 +9,7 @@ import json
 import os
 import re
 import sys
+from collections import defaultdict
 from copy import deepcopy
 
 from flask import Flask, render_template, request, current_app
@@ -279,6 +280,23 @@ def update(assay, version):
                                selected_project=assay,
                                selected_version=version,
                                messages=messages)
+    elif request.form['update_button'] == 'overview':
+        data = state.get_assay_overview()
+
+        # Collect assay → versions mapping
+        assay_columns = defaultdict(list)
+        for row in data.values():
+            for col in row.keys():
+                assay, version = col.split(":")
+                if version not in assay_columns[assay]:
+                    assay_columns[assay].append(version)
+
+        for assay in assay_columns:
+            assay_columns[assay].sort()
+
+        return render_template("overview.html",
+                               data=data,
+                               assay_columns=dict(assay_columns))
     elif request.form['update_button'] == "reset":
         state.config = load_config()
         state.preset_list = load_presets()

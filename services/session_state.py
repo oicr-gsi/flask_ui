@@ -26,6 +26,22 @@ class SessionState:
                                "versions": list(self.config['values'][a]['versions'].keys())})
         return assay_list
 
+    '''This builds a data structure for rendering an overview table of assays'''
+    def get_assay_overview(self) -> dict:
+        assay_overview = {}
+        try:
+            for a in self.config['values'].keys():
+                for v in self.config['values'][a]['versions'].keys():
+                    for wf, wf_versions in self.config['values'][a]['versions'][v]['workflows'].items():
+                        if wf not in assay_overview.keys():
+                            assay_overview[wf] = {}
+                        assay_key = a + ":" + v
+                        if isinstance(wf_versions, list) and len(wf_versions) > 0:
+                            assay_overview[wf][assay_key] = wf_versions
+        except KeyError:
+            print("ERROR: failed to parse configuration for overview generation")
+        return assay_overview
+
     def get_config(self):
         return self.config
 
