@@ -76,6 +76,13 @@
   padding-right: 10px;
 }
 
+/* oselctor class, used for select element for overview type */
+.oselector {
+  overflow-x: auto;
+  font-weight: bold;
+  max-width: 30%;
+}
+
 /* Missing values */
 .missing {
   color: #999;

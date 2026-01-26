@@ -7,6 +7,8 @@
 """
 
 REF_KEY = 'reference'
+SUPPORTED_OVERVIEW_MODES = [{"id": "fromFile", "title": "Current configuration (.jsonconfig file)"},
+                            {"id": "fromState", "title": "Updated configuration (memory)"}]
 
 def get_supported():
     return ['s', 'object']

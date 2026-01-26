@@ -10,6 +10,26 @@
     <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
 </head>
 <body>
+<h1 class="ui left aligned header">Configuration Overview</h1>
+ <form class="ui form" action="/overview" method="post">
+     <div class="oselector">
+        <label>Select Overview type</label>
+        <select name="selectedOverview" id="overview" value="{{selected_overview}}"
+                onchange='document.getElementById("updated_overview").value=document.getElementById("overview").value;
+                          this.form.submit()'>
+          {% for overview in overview_list %}
+          {% if overview.id == selected_overview %}
+          <option value="{{overview.id}}" selected="selected">{{overview.title}}</option>
+          {% else %}
+          <option value="{{overview.id}}">{{overview.title}}</option>
+          {% endif %}
+          {% endfor %}
+        </select>
+        <!--This hidden input holds the name of the overview type being updated, will keep the value on selecting
+            another overview and can be used to update the values when user navigates away-->
+        <input type="hidden" id="updated_overview" name="updated_overview" value="{{selected_overview}}">
+     </div>
+ </form>
 <div class="table-wrapper">
 <table class="matrix">
   <thead>

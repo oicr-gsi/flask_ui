@@ -26,13 +26,13 @@ class SessionState:
                                "versions": list(self.config['values'][a]['versions'].keys())})
         return assay_list
 
-    '''This builds a data structure for rendering an overview table of assays'''
-    def get_assay_overview(self) -> dict:
+    @staticmethod
+    def config_to_overview(data: dict) -> dict:
         assay_overview = {}
         try:
-            for a in self.config['values'].keys():
-                for v in self.config['values'][a]['versions'].keys():
-                    for wf, wf_versions in self.config['values'][a]['versions'][v]['workflows'].items():
+            for a in data['values'].keys():
+                for v in data['values'][a]['versions'].keys():
+                    for wf, wf_versions in data['values'][a]['versions'][v]['workflows'].items():
                         if wf not in assay_overview.keys():
                             assay_overview[wf] = {}
                         assay_key = a + ":" + v
@@ -41,6 +41,10 @@ class SessionState:
         except KeyError:
             print("ERROR: failed to parse configuration for overview generation")
         return assay_overview
+
+    '''This builds a data structure for rendering an overview table of assays'''
+    def get_assay_overview(self) -> dict:
+        return SessionState.config_to_overview(self.config)
 
     def get_config(self):
         return self.config
@@ -124,14 +128,15 @@ class SessionState:
             )
 
         def update_assay_for_instance(assay, inst):
-            """Apply workflow updates for a given assay & instance."""
-            for ver, ver_data in config[assay]["versions"].items():
-                for wf, existing_wf in ver_data["workflows"].items():
-                    extra = olive_hash[inst].get(wf, [])
-                    updated[assay]["versions"][ver]["workflows"][wf] = merge_workflows(existing_wf, extra)
-                    '''Delete entries with empty version list'''
-                    if len(updated[assay]["versions"][ver]["workflows"][wf]) == 0:
-                        del updated[assay]["versions"][ver]["workflows"][wf]
+            """Apply workflow updates to the latest version of a given assay & instance."""
+            ver = list(config[assay]["versions"].keys())[-1]
+            ver_data = config[assay]["versions"][ver]
+            for wf, existing_wf in ver_data["workflows"].items():
+                extra = olive_hash[inst].get(wf, [])
+                updated[assay]["versions"][ver]["workflows"][wf] = merge_workflows(existing_wf, extra)
+                '''Delete entries with empty version list'''
+                if len(updated[assay]["versions"][ver]["workflows"][wf]) == 0:
+                    del updated[assay]["versions"][ver]["workflows"][wf]
 
         instance_for_assay = {assay: find_instance_for_assay(assay) for assay in config}
         updated_assays = {assay for assay, inst in instance_for_assay.items() if inst is not None}

@@ -267,6 +267,29 @@ def clone():
                            checkbox_list=enabled_workflows,
                            texts_list=[{'id': "reference", 'value': reference}])
 
+""" Overview configuration, on file system or in-Memory """
+@my_app.route("/overview", methods=["POST"])
+def overview():
+    overview_id = request.form.get("updated_overview")
+    if overview_id == supported_types.SUPPORTED_OVERVIEW_MODES[1]["id"]:
+        data = state.get_assay_overview()  # will depend on the type of overview: either from file or memory
+    else:
+        data = SessionState.config_to_overview(load_config())
+    # Collect assay → versions mapping
+    assay_columns = defaultdict(list)
+    for row in data.values():
+        for col in row.keys():
+            assay, version = col.split(":")
+            if version not in assay_columns[assay]:
+                assay_columns[assay].append(version)
+
+    for assay in assay_columns:
+        assay_columns[assay].sort()
+    return render_template("overview.html",
+                           data=data,
+                           selected_overview=overview_id,
+                           overview_list=supported_types.SUPPORTED_OVERVIEW_MODES,
+                           assay_columns=dict(assay_columns))
 
 """ Update a project """
 @my_app.route("/update/<path:assay>/<string:version>", methods=["POST"])
@@ -281,8 +304,7 @@ def update(assay, version):
                                selected_version=version,
                                messages=messages)
     elif request.form['update_button'] == 'overview':
-        data = state.get_assay_overview()
-
+        data = SessionState.config_to_overview(load_config())
         # Collect assay → versions mapping
         assay_columns = defaultdict(list)
         for row in data.values():
@@ -290,12 +312,13 @@ def update(assay, version):
                 assay, version = col.split(":")
                 if version not in assay_columns[assay]:
                     assay_columns[assay].append(version)
-
         for assay in assay_columns:
             assay_columns[assay].sort()
 
         return render_template("overview.html",
                                data=data,
+                               selected_overview=supported_types.SUPPORTED_OVERVIEW_MODES[0]["id"],
+                               overview_list=supported_types.SUPPORTED_OVERVIEW_MODES,
                                assay_columns=dict(assay_columns))
     elif request.form['update_button'] == "reset":
         state.config = load_config()
