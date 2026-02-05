@@ -86,13 +86,14 @@ Steps for a session may include some or all of the following:
 * Apply a preset if applicable
 * Create a configuration for a new assay by cloning, then applying a preset
   or changing individual parameters
-* Click Apply, that will update the **assay_staging.jsonconfig** on disk (the path/name is customizable)
 * Note that if you check/uncheck some boxes you will need to click Record
   otherwise your changes will be lost if you select another assay
+* Write to Disk saves changes in a file specified as **assay_stage_file** in your .toml config file
 * Go to your local directory with shesmu config files, create a branch, review 
-  and commit your changes. Push to the repo and create a Pull Request
+  and commit your changes. Push to the origin and create a Pull Request
 * versions for the selected workflows are inserted automatically using the information from a scan of the
-  deployed olives at the start. This needs to be checked carefully (may be time-consuming).
+  deployed olives at the start. Only the **LATEST** version of assay is updated automatically.
+  This needs to be checked carefully (may be time-consuming).
 
 ## Updates to Presets
 
