@@ -87,6 +87,21 @@ class SessionState:
         return OrderedDict(sorted_items)
 
     """
+       Perform a prefix check on assay, we are routing the selections of workflows (which can be instance-specific)
+       depending on prefixes in assay names
+    """
+    @staticmethod
+    def is_instance_specific(assay: str, filters: dict, instance: str):
+        try:
+            prefixes = [filters[instance]] if isinstance(filters[instance], str) else filters[instance]
+            for p in prefixes:
+                if re.match(p, assay):
+                    return True
+            return False
+        except KeyError:
+            return False
+
+    """
         We need a vetted list of workflows, instance-specific. This is good only if the following is true:
         * we do not have any filters
         * OR we have N of filters = (N of instances) - 1
@@ -95,7 +110,7 @@ class SessionState:
     def get_filtered_wf_list(self, assay: str, olive_hash: dict, filters: dict):
         if len(filters) > 0:
             for inst in filters.keys():
-                if re.match(filters[inst], assay) and inst in olive_hash.keys():
+                if self.is_instance_specific(assay, filters, inst) and inst in olive_hash.keys():
                     workflows = list(olive_hash[inst].keys())
                     return sorted(workflows)
             for inst in olive_hash.keys():
@@ -123,7 +138,7 @@ class SessionState:
             """Return the instance string that matches a specific assay."""
             return next(
                 (inst for inst in filters
-                 if inst in olive_hash and re.match(filters[inst], assay)),
+                 if inst in olive_hash and self.is_instance_specific(assay, filters, inst)),
                 None
             )
 
