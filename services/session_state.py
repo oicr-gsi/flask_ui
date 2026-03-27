@@ -143,15 +143,15 @@ class SessionState:
             )
 
         def update_assay_for_instance(assay, inst):
-            """Apply workflow updates to the latest version of a given assay & instance."""
-            ver = list(config[assay]["versions"].keys())[-1]
-            ver_data = config[assay]["versions"][ver]
-            for wf, existing_wf in ver_data["workflows"].items():
-                extra = olive_hash[inst].get(wf, [])
-                updated[assay]["versions"][ver]["workflows"][wf] = merge_workflows(existing_wf, extra)
-                '''Delete entries with empty version list'''
-                if len(updated[assay]["versions"][ver]["workflows"][wf]) == 0:
-                    del updated[assay]["versions"][ver]["workflows"][wf]
+            """Apply workflow updates to the given assay & instance."""
+            for ver in  config[assay]["versions"].keys():
+                ver_data = config[assay]["versions"][ver]
+                for wf, existing_wf in ver_data["workflows"].items():
+                    extra = olive_hash[inst].get(wf, [])
+                    updated[assay]["versions"][ver]["workflows"][wf] = merge_workflows(existing_wf, extra)
+                    '''Delete entries with empty version list'''
+                    if len(updated[assay]["versions"][ver]["workflows"][wf]) == 0:
+                        del updated[assay]["versions"][ver]["workflows"][wf]
 
         instance_for_assay = {assay: find_instance_for_assay(assay) for assay in config}
         updated_assays = {assay for assay, inst in instance_for_assay.items() if inst is not None}
