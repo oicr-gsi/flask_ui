@@ -7,4 +7,4 @@ instances=["research","production-cap"]
 blacklist=['vidarr-u20-providencePipeline.shesmu','vidarr-u20-pbcmProjectMedipsPipe.shesmu',"vidarr-u20-fileinjection.shesmu"]
 
 [prefixes]
-research="RUO"
+research=["RUO","BYOD"]
