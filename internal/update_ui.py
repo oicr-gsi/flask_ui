@@ -15,21 +15,22 @@ from bs4 import BeautifulSoup as Bs
 """
 class updateUi:
 
-    def __init__(self, workflows: list, reference: str):
+    def __init__(self, workflows: list, root_settings: list):
         self.ui = ""
-        self.render_ui(workflows, reference)
+        self.render_ui(workflows, root_settings)
 
     """Getter function for UI snippet"""
     def get_ui(self):
         return self.ui
 
     """ Render workflow selection UI here """
-    def render_ui(self, workflows: list, reference: str):
+    def render_ui(self, workflows: list, root_settings: list):
         my_html = '<ul style="list-style: none;" xmlns:input="http://www.w3.org/1999/html">'
         for wf in workflows:
             '''Render checkboxes'''
             my_html += supported_types.get_rendered(wf, 's')
         '''Render a text box with reference'''
-        my_html += supported_types.get_rendered(reference, 'object')
+        for root_entry in root_settings:
+            my_html += supported_types.get_rendered(root_entry["id"], 'object')
         soup = Bs(my_html, "html.parser")
         self.ui = soup.prettify()

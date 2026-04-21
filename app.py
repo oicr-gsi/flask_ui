@@ -110,10 +110,11 @@ def save_config(conf_data: dict, output_file: str):
         with open(output_file, "w") as wfj:
             jstring = json.dumps(vetted_od, indent=2, ensure_ascii=False)
             jstring = pretty_json(jstring)
-            '''Take care of strings with reference'''
-            pattern_string = supported_types.REF_KEY + r"\S+\s+\S+\d\","
-            ptr = re.compile(f'({pattern_string})')
-            jstring = re.sub(ptr, r'\1' + "\n      ", jstring)
+            '''Take care of root strings such as reference (pay attention to the pattern)'''
+            for rootKey in supported_types.ROOT_KEYS:
+                pattern_string = rootKey + r"\S+\s+\S+\d\","
+                ptr = re.compile(f'({pattern_string})')
+                jstring = re.sub(ptr, r'\1' + "\n      ", jstring)
             wfj.write(jstring)
             print(f"INFO: Saved staged assay configuration into a file {output_file}")
     except:
@@ -131,8 +132,8 @@ def parse_update(update_object, assay_config: dict, available_olives: list, vers
     for key, value in update_object.items():
         if key in available_olives and isinstance(value, str) and value == 'on':
             enabled_workflows.append(key)
-        elif key == supported_types.REF_KEY and value != assay_config.get(supported_types.REF_KEY, "Not Set"):
-            parsed_dict[supported_types.REF_KEY] = value
+        elif key in supported_types.ROOT_KEYS and value != assay_config.get(key, "Not Set"):
+            parsed_dict[key] = value
     for wf in enabled_workflows:
         if wf not in assay_config['versions'][version]['workflows'].keys():
             parsed_dict['versions'][version]['workflows'][wf] = []
@@ -157,13 +158,16 @@ def index():
     vetted_workflows = state.get_filtered_wf_list(assay,
                                                   current_app.config.get("SCAN_CACHE", {}),
                                                   current_app.config.get("prefixes", {}))
-    reference = state.config['values'][assay].get("reference", "Not Set")
+    """we check and register all values for root keys, if present"""
+    root_settings = []
+    for rootKey in supported_types.ROOT_KEYS:
+        root_settings.append({'id': rootKey, 'value': state.config['values'][assay].get(rootKey, "Not Set")})
     """We need to pass only the enabled workflows, js script will put the checkmarks accordingly"""
     json_snippet = state.config['values'][assay]['versions'][version]['workflows']
 
     enabled_workflows = obtain_enabled(json_snippet)
     json_text = json.dumps(json_snippet, sort_keys=True, indent=2)
-    ui_renderer = update_ui.updateUi(vetted_workflows, reference)
+    ui_renderer = update_ui.updateUi(vetted_workflows, root_settings)
     return render_template('base.html',
                            project_list=state.get_assays(),
                            preset_list=list(state.get_presets()['presets'].keys()),
@@ -172,7 +176,7 @@ def index():
                            nested_list=ui_renderer.get_ui(),
                            json_snippet=pretty_json(json_text),
                            checkbox_list=enabled_workflows,
-                           texts_list=[{'id': "reference", 'value': reference}])
+                           texts_list=root_settings)
 
 
 """ Upon selection of a project or preset update the values in the form """
@@ -201,14 +205,17 @@ def select():
             json_snippet = updated_snippet['versions'][version]['workflows']
             messages.append(dict(title="Warning",
                                  body="Preset " + preset + " applied to project " + assay + " v." + updated_version))
-        reference = state.config['values'][assay].get("reference", "Not Set")
+        """we check and register all values for root keys, if present"""
+        root_settings = []
+        for rootKey in supported_types.ROOT_KEYS:
+            root_settings.append({'id': rootKey, 'value': state.config['values'][assay].get(rootKey, "Not Set")})
         enabled_workflows = obtain_enabled(json_snippet)
         """vetted_workflows are instance-specific and retrieved from a fresh scan of deployed olives"""
         vetted_workflows = state.get_filtered_wf_list(assay,
                                                       current_app.config.get("SCAN_CACHE", {}),
                                                       current_app.config.get("prefixes", {}))
         json_text = json.dumps(json_snippet, sort_keys=True, indent=2)
-        ui_renderer = update_ui.updateUi(vetted_workflows, reference)
+        ui_renderer = update_ui.updateUi(vetted_workflows, root_settings)
         return render_template('base.html',
                                project_list=state.get_assays(),
                                preset_list=list(state.get_presets()['presets'].keys()),
@@ -219,7 +226,7 @@ def select():
                                json_snippet=pretty_json(json_text),
                                messages=messages,
                                checkbox_list=enabled_workflows,
-                               texts_list=[{'id': "reference", 'value': reference}])
+                               texts_list=root_settings)
     return None
 
 
@@ -235,8 +242,8 @@ def clone():
     if cln:
         if cln not in state.config['values'].keys() or vrs not in state.config['values'][cln]['versions'].keys():
             ensure(state.config['values'], cln, "versions")[vrs] = {}
-        state.config['values'][cln][supported_types.REF_KEY] = \
-            state.config['values'][assay].get(supported_types.REF_KEY, "Not Set")
+        for rootKey in supported_types.ROOT_KEYS:
+            state.config['values'][cln][rootKey] = state.config['values'][assay].get(rootKey, "Not Set")
         state.config['values'][cln]['versions'][vrs].update(state.config['values'][assay]['versions'][version])
         """ Order assays alphabetically """
         od = {k: v for k, v in sorted(state.config['values'].items())}
@@ -249,13 +256,16 @@ def clone():
     vetted_workflows = state.get_filtered_wf_list(assay,
                                                   current_app.config.get("SCAN_CACHE", {}),
                                                   current_app.config.get("prefixes", {}))
-    reference = state.config['values'][assay].get("reference", "Not Set")
+    """we check and register all values for root keys, if present"""
+    root_settings = []
+    for rootKey in supported_types.ROOT_KEYS:
+        root_settings.append({'id': rootKey, 'value': state.config['values'][assay].get(rootKey, "Not Set")})
     json_snippet = state.config['values'][cln]['versions'][vrs]['workflows'] \
         if cln \
         else state.config['values'][assay]['versions'][version]['workflows']
     enabled_workflows = obtain_enabled(json_snippet)
     json_text = json.dumps(json_snippet, sort_keys=True, indent=2)
-    ui_renderer = update_ui.updateUi(vetted_workflows, reference)
+    ui_renderer = update_ui.updateUi(vetted_workflows, root_settings)
     return render_template('base.html',
                            project_list=state.get_assays(),
                            preset_list=list(state.preset_list['presets'].keys()),
@@ -265,7 +275,7 @@ def clone():
                            json_snippet=pretty_json(json_text),
                            messages=messages,
                            checkbox_list=enabled_workflows,
-                           texts_list=[{'id': "reference", 'value': reference}])
+                           texts_list=root_settings)
 
 """ Overview configuration, on file system or in-Memory """
 @my_app.route("/overview", methods=["POST"])
@@ -368,11 +378,14 @@ def update(assay, version):
     vetted_workflows = state.get_filtered_wf_list(assay,
                                                   current_app.config.get("SCAN_CACHE", {}),
                                                   current_app.config.get("prefixes", {}))
-    reference = state.config['values'][assay].get("reference", "Not Set")
+    """we check and register all values for root keys, if present"""
+    root_settings = []
+    for rootKey in supported_types.ROOT_KEYS:
+        root_settings.append({'id': rootKey, 'value': state.config['values'][assay].get(rootKey, "Not Set")})
     json_snippet = state.config['values'][assay]['versions'][version]['workflows']
     enabled_workflows = obtain_enabled(json_snippet)
     json_text = json.dumps(json_snippet, sort_keys=True, indent=2)
-    ui_renderer = update_ui.updateUi(vetted_workflows, reference)
+    ui_renderer = update_ui.updateUi(vetted_workflows, root_settings)
     return render_template('base.html',
                            project_list=state.get_assays(),
                            preset_list=list(state.preset_list['presets'].keys()),
@@ -382,7 +395,7 @@ def update(assay, version):
                            json_snippet=pretty_json(json_text),
                            messages=messages,
                            checkbox_list=enabled_workflows,
-                           texts_list=[{'id': "reference", 'value': reference}])
+                           texts_list=root_settings)
 
 
 """ The App starts here """

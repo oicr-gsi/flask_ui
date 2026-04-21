@@ -6,7 +6,7 @@
 
 """
 
-REF_KEY = 'reference'
+ROOT_KEYS = ['gencode', 'reference']
 SUPPORTED_OVERVIEW_MODES = [{"id": "fromFile", "title": "Current configuration (.jsonconfig file)"},
                             {"id": "fromState", "title": "Updated configuration (memory)"}]
 
@@ -63,9 +63,9 @@ class OBJECT:
     def render_element(self):
         return f'<li class="inline field"> \
              <div class="ui right pointing label"> \
-             reference \
+             {self.my_id} \
              </div> \
-             <input type="text" id="{self.my_id}" name="reference" size="8"> \
+             <input type="text" id="{self.my_id}" name="{self.my_id}" size="8"> \
              </li>'
 
     @staticmethod
