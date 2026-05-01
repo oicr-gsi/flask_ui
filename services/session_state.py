@@ -144,7 +144,7 @@ class SessionState:
 
         def update_assay_for_instance(assay, inst):
             """Apply workflow updates to the given assay & instance."""
-            for ver in  config[assay]["versions"].keys():
+            for ver in config[assay]["versions"].keys():
                 ver_data = config[assay]["versions"][ver]
                 for wf, existing_wf in ver_data["workflows"].items():
                     extra = olive_hash[inst].get(wf, [])

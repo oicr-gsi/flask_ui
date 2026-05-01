@@ -111,10 +111,11 @@ def save_config(conf_data: dict, output_file: str):
             jstring = json.dumps(vetted_od, indent=2, ensure_ascii=False)
             jstring = pretty_json(jstring)
             '''Take care of root strings such as reference (pay attention to the pattern)'''
-            for rootKey in supported_types.ROOT_KEYS:
+            # TODO this may be not needed if we reshuffle the jsonconfig
+            for rootKey in supported_types.RESOURCE_KEYS:
                 pattern_string = rootKey + r"\S+\s+\S+\d\","
                 ptr = re.compile(f'({pattern_string})')
-                jstring = re.sub(ptr, r'\1' + "\n      ", jstring)
+                jstring = re.sub(ptr, r'\1' + "\n            ", jstring)
             wfj.write(jstring)
             print(f"INFO: Saved staged assay configuration into a file {output_file}")
     except:
@@ -130,13 +131,22 @@ def parse_update(update_object, assay_config: dict, available_olives: list, vers
     parsed_dict = deepcopy(assay_config)
     enabled_workflows = []
     for key, value in update_object.items():
-        if key in available_olives and isinstance(value, str) and value == 'on':
-            enabled_workflows.append(key)
-        elif key in supported_types.ROOT_KEYS and value != assay_config.get(key, "Not Set"):
-            parsed_dict[key] = value
+        try:
+            if key in available_olives and isinstance(value, str) and value == 'on':
+                enabled_workflows.append(key)
+            elif key in supported_types.RESOURCE_KEYS:
+                if (value is None or value == "") and key in parsed_dict['versions'][version]['resources'].keys():
+                    del(parsed_dict['versions'][version]['resources'][key])
+                elif value != assay_config['versions'][version]['resources'].get(key, "Not Set"):
+                    parsed_dict['versions'][version]['resources'][key] = value
+        except KeyError:
+            print("Missing needed key in config structure, format is incorrect")
     for wf in enabled_workflows:
-        if wf not in assay_config['versions'][version]['workflows'].keys():
-            parsed_dict['versions'][version]['workflows'][wf] = []
+        try:
+            if wf not in assay_config['versions'][version]['workflows'].keys():
+                parsed_dict['versions'][version]['workflows'][wf] = []
+        except KeyError:
+            print("Missing needed key in config structure, format is incorrect")
     for wf in assay_config['versions'][version]['workflows'].keys():
         if wf not in enabled_workflows:
             del (parsed_dict['versions'][version]['workflows'][wf])
@@ -160,8 +170,9 @@ def index():
                                                   current_app.config.get("prefixes", {}))
     """we check and register all values for root keys, if present"""
     root_settings = []
-    for rootKey in supported_types.ROOT_KEYS:
-        root_settings.append({'id': rootKey, 'value': state.config['values'][assay].get(rootKey, "Not Set")})
+    for rootKey in supported_types.RESOURCE_KEYS:
+        root_settings.append({'id': rootKey,
+                              'value': state.config['values'][assay]['versions'][version]['resources'].get(rootKey, "Not Set")})
     """We need to pass only the enabled workflows, js script will put the checkmarks accordingly"""
     json_snippet = state.config['values'][assay]['versions'][version]['workflows']
 
@@ -207,8 +218,9 @@ def select():
                                  body="Preset " + preset + " applied to project " + assay + " v." + updated_version))
         """we check and register all values for root keys, if present"""
         root_settings = []
-        for rootKey in supported_types.ROOT_KEYS:
-            root_settings.append({'id': rootKey, 'value': state.config['values'][assay].get(rootKey, "Not Set")})
+        for rootKey in supported_types.RESOURCE_KEYS:
+            root_settings.append({'id': rootKey,
+                                  'value': state.config['values'][assay]['versions'][version]['resources'].get(rootKey, "Not Set")})
         enabled_workflows = obtain_enabled(json_snippet)
         """vetted_workflows are instance-specific and retrieved from a fresh scan of deployed olives"""
         vetted_workflows = state.get_filtered_wf_list(assay,
@@ -242,8 +254,10 @@ def clone():
     if cln:
         if cln not in state.config['values'].keys() or vrs not in state.config['values'][cln]['versions'].keys():
             ensure(state.config['values'], cln, "versions")[vrs] = {}
-        for rootKey in supported_types.ROOT_KEYS:
-            state.config['values'][cln][rootKey] = state.config['values'][assay].get(rootKey, "Not Set")
+            state.config['values'][cln]['versions'][vrs]['resources'] = {}
+        for rootKey in supported_types.RESOURCE_KEYS:
+            state.config['values'][cln]['versions'][vrs]['resources'][rootKey] = \
+                (state.config['values'][assay]['versions'][version]['resources'].get(rootKey, "Not Set"))
         state.config['values'][cln]['versions'][vrs].update(state.config['values'][assay]['versions'][version])
         """ Order assays alphabetically """
         od = {k: v for k, v in sorted(state.config['values'].items())}
@@ -258,8 +272,9 @@ def clone():
                                                   current_app.config.get("prefixes", {}))
     """we check and register all values for root keys, if present"""
     root_settings = []
-    for rootKey in supported_types.ROOT_KEYS:
-        root_settings.append({'id': rootKey, 'value': state.config['values'][assay].get(rootKey, "Not Set")})
+    for rootKey in supported_types.RESOURCE_KEYS:
+        root_settings.append({'id': rootKey,
+                              'value': state.config['values'][assay]['versions'][version]['resources'].get(rootKey, "Not Set")})
     json_snippet = state.config['values'][cln]['versions'][vrs]['workflows'] \
         if cln \
         else state.config['values'][assay]['versions'][version]['workflows']
@@ -380,8 +395,9 @@ def update(assay, version):
                                                   current_app.config.get("prefixes", {}))
     """we check and register all values for root keys, if present"""
     root_settings = []
-    for rootKey in supported_types.ROOT_KEYS:
-        root_settings.append({'id': rootKey, 'value': state.config['values'][assay].get(rootKey, "Not Set")})
+    for rootKey in supported_types.RESOURCE_KEYS:
+        root_settings.append({'id': rootKey,
+                              'value': state.config['values'][assay]['versions'][version]['resources'].get(rootKey, "Not Set")})
     json_snippet = state.config['values'][assay]['versions'][version]['workflows']
     enabled_workflows = obtain_enabled(json_snippet)
     json_text = json.dumps(json_snippet, sort_keys=True, indent=2)

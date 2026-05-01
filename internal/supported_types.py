@@ -6,7 +6,7 @@
 
 """
 
-ROOT_KEYS = ['gencode', 'reference']
+RESOURCE_KEYS = ['gencode', 'reference']
 SUPPORTED_OVERVIEW_MODES = [{"id": "fromFile", "title": "Current configuration (.jsonconfig file)"},
                             {"id": "fromState", "title": "Updated configuration (memory)"}]
 
