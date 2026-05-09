@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clone a project</title>
+    <title>Clone an assay</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
     <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
 </head>
@@ -15,15 +15,26 @@
 
     <form class="ui form" action="/clone" method="post">
         <div class="field">
-            <label>Project To Clone:</label>
-           <input type="text" id="project" value="{{selected_project}}" name="project"
-                   placeholder="Project Goes Here..."
+            <label>Assay To Clone:</label>
+           <input type="text" id="source_assay" value="{{selected_project}}" name="source_assay"
+                   placeholder="Assay Goes Here..."
                    readonly="readonly"><br>
         </div>
+        <div class="field" style="height=0;display:none">
+        <input type="text" id="source_version" value="{{selected_version}}" name="source_version"
+               hidden="hidden"
+               readonly="readonly"><br>
+        </div>
+        <!--The box for new assay can be left empty if creating a new version of existing assay-->
         <div class="field">
-            <label>Clone into New Project:</label>
-            <input type="text" id="clone" name="clone"
-                   placeholder="Name of new project...">
+            <label>Clone into New Assay:</label>
+            <input type="text" id="clone_assay" name="clone_assay"
+                   placeholder="Name of a new or existing assay...">
+        </div>
+        <div class="field">
+            <label>Assign a version:</label>
+            <input type="text" id="clone_version" name="clone_version"
+                   placeholder="Version of assay...">
         </div>
         <button class="ui green button" name="clone_button" type="submit">Clone</button>
     </form>

@@ -1,10 +1,12 @@
 ﻿## Flask-based configuration UI
 
-This app aims to provide a graphical interface for customization of **project_info.jsonconfig** file used by shesmu.
+This app aims to provide a graphical interface for customization of **assay_info.jsonconfig** file used by shesmu.
 The interface requires flask installation so it can run in a web browser locally. Some settings also
-need to be specified, see INSTALL for that. 
+need to be specified, see INSTALL for that.
 
 ## Setting up for Development 
+
+It is required that virtual environment is created using Python 3.12 or newer
  
 [Creating Virtual Environment](https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-and-using-virtual-environments)
 
@@ -18,23 +20,21 @@ pip install -r requirements.txt
 Configure the application's settings file:
 
 ```
-CONFIG_FILE_DIRECTORY=/home/USERNAME/secrets
-cp ui-config.cfg.example "${CONFIG_FILE_DIRECTORY}"/ui-config.cfg
+cp ui-config.toml.example "${CONFIG_FILE_DIRECTORY}"/ui-config.toml
 ```
 
 Modify the new file to point to the locations of the shesmu configuration files (currently in
-spb-seqware-production).
+analysis-config).
 
 ## Launching the App
 
 Normally, you would update your production branch of the repo with shesmu configuration files 
-(currently it is spb-seqware-production) and go into your flask-ui directory where
-config-ui.py script resides. Before running the app, some environment variables need to be set:
+(olives) and go into your flask-ui directory where
+app.py script resides. Before running the app, some environment variables need to be set:
 
 ```
- export FLASK_APP=config_ui.py
  export FLASK_ENV=development
- export UICONFIG_SETTINGS="/home/USERNAME/secrets/ui_config.cfg"
+ export UICONFIG_SETTINGS="/home/USERNAME/secrets/ui_config.toml"
 ```
 
 Assuming that you have your virtual environment configured, you also need to run
@@ -61,13 +61,11 @@ the prompt should change after that. After everything is initialized, type
 The message should look similar to this:
 
 ```
- * Serving Flask app 'config_ui.py' (lazy loading)
- * Environment: development
- * Debug mode: on
- * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
- * Restarting with stat
- * Debugger is active!
- * Debugger PIN: 874-681-120
+ INFO: We have 67 .shesmu files for research
+ INFO: We have 45 .shesmu files for production-cap
+ * Debug mode: off
+ * Running on http://127.0.0.1:5000
+   Press CTRL+C to quit
 ```
 
 ## Stopping the app
@@ -79,32 +77,33 @@ You may also type **deactivate** to terminate the python virtual environment use
 
 ![usage_flowchart](images/ui_flowchart.png)
 
-The UI shows a couple of drop-down lists, one for projects and the other one for presets
+The UI shows drop-down lists, one for assays, one for versions of selected assay, one for presets
 Steps for a session may include some or all of the following:
 
-* Select a project, review the configuration. Make your selection of parameters and enable
+* Select an assay, review the configuration. Make your selection of parameters and enable
   or disable individual components of computational pipelines
 * Reset if not happy with your changes, this will restore configuration from the disk
 * Apply a preset if applicable
-* Create a configuration for a new project by cloning, then applying a preset
+* Create a configuration for a new assay by cloning, then applying a preset
   or changing individual parameters
-* Click Apply, that will update the **project_info.jsonconfig** on disk
-* Note that if you check/uncheck some boxes you will need to click Apply
-  otherwise your changes will be lost if you select another project
+* Note that if you check/uncheck some boxes you will need to click Record
+  otherwise your changes will be lost if you select another assay
+* Write to Disk saves changes in a file specified as **assay_stage_file** in your .toml config file
 * Go to your local directory with shesmu config files, create a branch, review 
-  and commit your changes. Push to the repo and create a Pull Request
+  and commit your changes. Push to the origin and create a Pull Request
+* versions for the selected workflows are inserted automatically using the information from a scan of the
+  deployed olives at the start. Only the **LATEST** version of assay is updated automatically.
+  This needs to be checked carefully (may be time-consuming).
 
-## Automatic Updates to Presets
+## Updates to Presets
 
-The UI app relies on **project_presets.conf** file which defines a number of settings for
+The UI app relies on **assay_presets.conf** file which defines a number of settings for
 standard pipelines configured by GSI. Occasionally, settings may be removed or added to
-the **project_info.jsonconfig**. flask UI app will detect such changes and auomatically 
-update the preset file. Pipeline Leads should review these changes and ensure that
-they were applied correctly (especially important when a complex setting as *##_pipeline*
-is added). The app takes it's best guess what to use to configure a new setting but it
-always needs to be verified. The proper procedure for this would be to use *git diff*
-followed by manual edits in something like vim or other editor of choice.
+the **assay_info.jsonconfig**. flask UI app will not detect and highlight such changes! 
+The app takes it's best guess what to use to configure a new 
+setting but it always needs to be verified. The proper procedure for this would be to 
+use *git diff* followed by manual edits in something like vim or other editor of choice.
 
 ------------------------------------------------------------------------------
 
-Developed using Python 3.8, Pycharm IDE v.2020.1 and Flask 2.0.2 
+Developed using Python 3.12, Pycharm IDE v.2025.1 and Flask 3.1.0 

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overview of assay configurations</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/overview.css')}}">
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+</head>
+<body>
+<h1 class="ui left aligned header">Configuration Overview</h1>
+ <form class="ui form" action="/overview" method="post">
+     <div class="oselector">
+        <label>Select Overview type</label>
+        <select name="selectedOverview" id="overview" value="{{selected_overview}}"
+                onchange='document.getElementById("updated_overview").value=document.getElementById("overview").value;
+                          this.form.submit()'>
+          {% for overview in overview_list %}
+          {% if overview.id == selected_overview %}
+          <option value="{{overview.id}}" selected="selected">{{overview.title}}</option>
+          {% else %}
+          <option value="{{overview.id}}">{{overview.title}}</option>
+          {% endif %}
+          {% endfor %}
+        </select>
+        <!--This hidden input holds the name of the overview type being updated, will keep the value on selecting
+            another overview and can be used to update the values when user navigates away-->
+        <input type="hidden" id="updated_overview" name="updated_overview" value="{{selected_overview}}">
+     </div>
+ </form>
+<div class="table-wrapper">
+<table class="matrix">
+  <thead>
+    <!-- Assay group row -->
+    <tr class="assay-header">
+      <th rowspan="2">Workflow</th>
+      {% for assay, versions in assay_columns.items() %}
+        <th colspan="{{ versions | length }}" class="assay-group">
+          <div class="rotate-90">{{ assay }}</div>
+        </th>
+      {% endfor %}
+    </tr>
+
+    <!-- Version row -->
+    <tr class="version-header">
+      {% for assay, versions in assay_columns.items() %}
+        {% for version in versions %}
+          <th>{{ version }}</th>
+        {% endfor %}
+      {% endfor %}
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for workflow, row in data | dictsort %}
+      <tr>
+        <td class="workflow">{{ workflow }}</td>
+
+        {% for assay, versions in assay_columns.items() %}
+          {% for version in versions %}
+            {% set key = assay ~ ":" ~ version %}
+            <td class="{% if key not in row %}missing{% endif %}">
+            {% for value in row.get(key, ["—"]) %}
+              <div>
+                {% if value == "0.0.0" %}
+                  XXX
+                {% else %}
+                  {{ value }}
+                {% endif %}
+              </div>
+            {% endfor %}
+            </td>
+          {% endfor %}
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+</body>
+</html>
